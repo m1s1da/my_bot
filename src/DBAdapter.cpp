@@ -23,7 +23,11 @@ void DBAdapter::start_time_count(const uint64_t &user_id) {
 
 void DBAdapter::stop_time_count(const uint64_t &user_id) {
     auto it = user_connected_timestamp_map_.find(user_id);
+    if (it == user_connected_timestamp_map_.end()){
+        return;
+    }
     uint64_t session_time_length = get_time_now() - it->second;
+    user_connected_timestamp_map_.erase(it);
     write_time_overall(user_id, session_time_length);
     std::cout << "stop_time_count user_id: " << user_id << " session_time_length: " << session_time_length << std::endl;
 }
