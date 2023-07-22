@@ -18,7 +18,7 @@ int main() {
     });
 
     bot.on_voice_state_update([&db_adapter](const dpp::voice_state_update_t &event) {
-        uint64_t user_id = static_cast<uint64_t>(event.state.user_id);
+        const auto user_id = static_cast<uint64_t>(event.state.user_id);
         if (!event.state.channel_id.empty()) {
             // CONNECTED
             if (db_adapter.in_connected(user_id)) {
@@ -47,8 +47,8 @@ int main() {
     });
 
     bot.on_message_create([&db_adapter](const dpp::message_create_t &event) {
-        std::string msg = event.msg.content;
-        uint64_t user = event.msg.author.id;
+        const auto msg = event.msg.content;
+        const uint64_t user = event.msg.author.id;
         db_adapter.write_message_info(user, msg.size());
     });
 
