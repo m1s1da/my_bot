@@ -3,4 +3,5 @@
 
 
 run [init.sh](https://github.com/fgt31337/my_bot/blob/main/init.sh) to get required libs
+
 add _BOT_TOKEN_ and other optional variables to .env file 
