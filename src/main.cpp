@@ -5,7 +5,6 @@
 #include "DBAdapter.h"
 
 int main() {
-    std::map<uint64_t, uint64_t> user_time_map;
     auto &dotenv = dotenv::env.load_dotenv("../.env", true);
     dpp::cluster bot(dotenv["BOT_TOKEN"], dpp::i_default_intents | dpp::i_message_content);
     DBAdapter db_adapter;
