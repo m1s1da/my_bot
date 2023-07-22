@@ -20,7 +20,6 @@ void DBAdapter::start_time_count(const uint64_t &user_id) {
     std::cout << "start_time_count user_id: " << user_id << " time: " << get_time_now() << std::endl;
 }
 
-
 void DBAdapter::stop_time_count(const uint64_t &user_id) {
     auto it = user_connected_timestamp_map_.find(user_id);
     if (it == user_connected_timestamp_map_.end()) {
