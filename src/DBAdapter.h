@@ -16,7 +16,7 @@ public:
 
     void stop_time_count(const uint64_t &user_id);
 
-    void write_message_info(uint64_t &user_id, std::size_t msg_size);
+    void write_message_info(const uint64_t &user_id, const  std::size_t &msg_size);
 
 private:
     void write_time_overall(const uint64_t &user_id, const uint64_t &session_time_length);

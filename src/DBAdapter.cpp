@@ -23,7 +23,8 @@ void DBAdapter::start_time_count(const uint64_t &user_id) {
 
 void DBAdapter::stop_time_count(const uint64_t &user_id) {
     auto it = user_connected_timestamp_map_.find(user_id);
-    if (it == user_connected_timestamp_map_.end()){
+    if (it == user_connected_timestamp_map_.end()) {
+        std::cout << "ERROR in stop_time_count user_id: " << user_id << " not found!" << std::endl;
         return;
     }
     uint64_t session_time_length = get_time_now() - it->second;
@@ -39,17 +40,19 @@ void DBAdapter::write_time_overall(const uint64_t &user_id, const uint64_t &sess
 }
 
 uint64_t DBAdapter::get_time_now() {
-    const auto p1 = std::chrono::system_clock::now();
+    const auto ptr = std::chrono::system_clock::now();
     return std::chrono::duration_cast<std::chrono::seconds>(
-            p1.time_since_epoch()).count();
+            ptr.time_since_epoch()).count();
 }
 
-void DBAdapter::write_message_info(uint64_t &user_id, std::size_t msg_size) {
+void DBAdapter::write_message_info(const uint64_t &user_id, const std::size_t &msg_size) {
     if (msg_size > min_msg_size_) {
         user_long_msg_[user_id]++;
-        std::cout << "long message received from: " << user_id << std::endl;
+        std::cout << "long message received from: " << user_id <<
+                  std::endl;
     } else {
         user_short_msg_[user_id]++;
-        std::cout << "short message received from: " << user_id << std::endl;
+        std::cout << "short message received from: " << user_id <<
+                  std::endl;
     }
 }

@@ -35,14 +35,14 @@ int main() {
         }
     });
 
-    bot.on_guild_create([& db_adapter](const dpp::guild_create_t &event) {
+    bot.on_guild_create([&db_adapter](const dpp::guild_create_t &event) {
         auto voice_members = event.created->voice_members;
         for (const auto &[user_id, voice_state]: voice_members) {
             db_adapter.start_time_count(static_cast<uint64_t>(user_id));
         }
     });
 
-    bot.on_message_create([&bot, &db_adapter](const dpp::message_create_t &event){
+    bot.on_message_create([&db_adapter](const dpp::message_create_t &event) {
         std::string msg = event.msg.content;
         uint64_t user = event.msg.author.id;
         db_adapter.write_message_info(user, msg.size());
