@@ -18,12 +18,16 @@ int main() {
     });
 
     bot.on_voice_state_update([&db_adapter](const dpp::voice_state_update_t &event) {
+        uint64_t user_id = static_cast<uint64_t>(event.state.user_id);
         if (!event.state.channel_id.empty()) {
             // CONNECTED
-            db_adapter.start_time_count(static_cast<uint64_t>(event.state.user_id));
+            if (db_adapter.in_connected(user_id)) {
+                return;
+            }
+            db_adapter.start_time_count(user_id);
         } else {
             // DISCONNECTED
-            db_adapter.stop_time_count(static_cast<uint64_t>(event.state.user_id));
+            db_adapter.stop_time_count(user_id);
         }
     });
 

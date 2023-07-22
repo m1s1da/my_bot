@@ -56,3 +56,7 @@ void DBAdapter::write_message_info(const uint64_t &user_id, const std::size_t &m
                   std::endl;
     }
 }
+
+bool DBAdapter::in_connected(const uint64_t &user_id) {
+    return user_connected_timestamp_map_.find(user_id) != user_connected_timestamp_map_.end();
+}

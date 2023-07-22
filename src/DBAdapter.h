@@ -18,6 +18,8 @@ public:
 
     void write_message_info(const uint64_t &user_id, const  std::size_t &msg_size);
 
+    bool in_connected(const uint64_t &user_id);
+
 private:
     void write_time_overall(const uint64_t &user_id, const uint64_t &session_time_length);
 
