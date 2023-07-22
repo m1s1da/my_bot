@@ -26,7 +26,7 @@ void DBAdapter::stop_time_count(const uint64_t &user_id) {
         std::cout << "ERROR in stop_time_count user_id: " << user_id << " not found!" << std::endl;
         return;
     }
-    uint64_t session_time_length = get_time_now() - it->second;
+    const uint64_t session_time_length = get_time_now() - it->second;
     user_connected_timestamp_map_.erase(it);
     write_time_overall(user_id, session_time_length);
     std::cout << "stop_time_count user_id: " << user_id << " session_time_length: " << session_time_length << std::endl;
