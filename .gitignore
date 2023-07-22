@@ -1,3 +1,4 @@
-cmake*
-libs/*
-.env
+/cmake-build-debug/
+/libs/*
+/.env
+/.idea/
