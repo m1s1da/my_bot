@@ -42,10 +42,10 @@ uint64_t DBAdapter::get_time_now() {
 
 void DBAdapter::write_message_info(uint64_t &user_id, std::size_t msg_size) {
     if (msg_size > min_msg_size_) {
-        user_long_msg_.emplace(user_id, msg_size);
+        user_long_msg_[user_id]++;
         std::cout << "long message received from: " << user_id << std::endl;
     } else {
-        user_short_msg_.emplace(user_id, msg_size);
+        user_short_msg_[user_id]++;
         std::cout << "short message received from: " << user_id << std::endl;
     }
 }
