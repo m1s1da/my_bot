@@ -51,12 +51,12 @@ void DBAdapter::stop_time_count(const uint64_t &user_id, const uint64_t &guild_i
 
 void DBAdapter::write_message_info(const uint64_t &user_id, const uint64_t &guild_id, const string &msg, bool
 has_attachments) {
-    if (msg.size() > min_msg_size_) {
+    if (msg.length() > min_msg_size_) {
         user_long_msg_[{user_id, guild_id}]++;
-        spdlog::debug("long message received from: {0}, {1}", user_id, guild_id);
+        spdlog::debug("long message received from: {0}, {1} message: {2}", user_id, guild_id, msg);
     } else {
         user_short_msg_[{user_id, guild_id}]++;
-        spdlog::debug("short message received from: {0}, {1}", user_id, guild_id);
+        spdlog::debug("short message received from: {0}, {1}, {2}", user_id, guild_id, msg);
     }
 }
 
