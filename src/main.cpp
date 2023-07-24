@@ -1,5 +1,4 @@
 #include <dpp/dpp.h>
-
 #include "dotenv.h"
 
 #include "DBAdapter.h"
@@ -7,7 +6,25 @@
 int main() {
     auto &dotenv = dotenv::env.load_dotenv("../.env", true);
     dpp::cluster bot(dotenv["BOT_TOKEN"], dpp::i_default_intents | dpp::i_message_content);
-    DBAdapter db_adapter;
+
+    using namespace sqlite_orm;
+
+    dectype (auto) storage = make_storage("../my_bot_db",
+                                make_table("user_messages",
+                                           make_column("user_id", &UserMessages::user_id),
+                                           make_column("guild_id", &UserMessages::guild_id),
+                                           make_column("message_counter", &UserMessages::message_counter),
+                                           make_column("word_counter", &UserMessages::word_counter),
+                                           make_column("embed_counter", &UserMessages::embed_counter),
+                                           primary_key(&UserMessages::user_id, &UserMessages::guild_id)),
+                                make_table("user_voice",
+                                           make_column("user_id", &UserVoice::user_id),
+                                           make_column("guild_id", &UserVoice::guild_id),
+                                           make_column("message_counter", &UserVoice::voice_timer),
+                                           primary_key(&UserVoice::user_id, &UserVoice::guild_id))
+    );
+
+    DBAdapter db_adapter(storage);
     bot.on_log(dpp::utility::cout_logger());
 
     bot.on_ready([&bot](const dpp::ready_t &event) {

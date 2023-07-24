@@ -8,6 +8,8 @@ add_subdirectory(libs/DPP)
 add_subdirectory(libs/spdlog)
 add_subdirectory(libs/cpp-dotenv)
 
+find_package(SqliteOrm REQUIRED)
+
 # Create an executable
 add_executable(${PROJECT_NAME}
         src/main.cpp
@@ -15,11 +17,14 @@ add_executable(${PROJECT_NAME}
         src/DBAdapter.cpp src/DBAdapter.h)
 
 # Linking libraries
-target_link_libraries(${PROJECT_NAME}
+
+target_link_libraries(${PROJECT_NAME} PRIVATE
         dpp
         spdlog
         cpp_dotenv
+        sqlite_orm::sqlite_orm
         )
+#target_link_libraries(${PROJECT_NAME} PRIVATE sqlite_orm::sqlite_orm)
 
 # Specify includes
 target_include_directories(${PROJECT_NAME} PRIVATE
@@ -29,6 +34,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 
 # Set C++ version
 set_target_properties(${PROJECT_NAME} PROPERTIES
-        CXX_STANDARD 20
+        CXX_STANDARD 17
         CXX_STANDARD_REQUIRED ON
         )
