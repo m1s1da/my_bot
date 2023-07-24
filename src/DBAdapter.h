@@ -54,9 +54,7 @@ private:
 
     std::map<ug_pair, uint64_t> user_connected_timestamp_map_;
     std::map<ug_pair, uint64_t> user_time_overall_map_;
-    std::map<ug_pair, std::size_t> user_short_msg_;
-    std::map<ug_pair, std::size_t> user_long_msg_;
-    std::size_t min_msg_size_ = {10};
+    std::map<ug_pair, std::size_t> user_msg_;
 
     inline static auto storage_{make_storage("../my_bot_db",
                                              make_table("user_messages",

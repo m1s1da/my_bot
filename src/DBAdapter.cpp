@@ -8,12 +8,10 @@
 #include "dotenv.h"
 #include "spdlog/spdlog.h"
 
+#include "MessageChecker.h"
+
 
 DBAdapter::DBAdapter() {
-    auto &dotenv = dotenv::env.load_dotenv("../.env", true);
-    if (!dotenv["MIN_MSG_SIZE"].empty()) {
-        min_msg_size_ = stoi(dotenv["MIN_MSG_SIZE"]);
-    }
     storage_.sync_schema();
     spdlog::info("Database ready");
 }
@@ -51,13 +49,10 @@ void DBAdapter::stop_time_count(const uint64_t &user_id, const uint64_t &guild_i
 
 void DBAdapter::write_message_info(const uint64_t &user_id, const uint64_t &guild_id, const string &msg, bool
 has_attachments) {
-    if (msg.length() > min_msg_size_) {
-        user_long_msg_[{user_id, guild_id}]++;
-        spdlog::debug("long message received from: {0}, {1} message: {2}", user_id, guild_id, msg);
-    } else {
-        user_short_msg_[{user_id, guild_id}]++;
-        spdlog::debug("short message received from: {0}, {1}, {2}", user_id, guild_id, msg);
-    }
+    const uint32_t word_counter = MessageChecker::getWordCounter(msg);
+    user_msg_[{user_id, guild_id}] += word_counter;
+    spdlog::debug("message received from: {0}, {1} word_counter: {2} msg: {3}", user_id, guild_id, word_counter, msg);
+
 }
 
 bool DBAdapter::in_connected(const uint64_t &user_id, const uint64_t &guild_id) {

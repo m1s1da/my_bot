@@ -16,7 +16,7 @@ add_executable(${PROJECT_NAME}
         # your others files...
         src/DBAdapter.cpp
         src/DBAdapter.h
-        )
+        src/MessageChecker.cpp src/MessageChecker.h)
 
 # Linking libraries
 
