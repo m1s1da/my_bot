@@ -33,7 +33,8 @@ void DBAdapter::start_time_count(const uint64_t &user_id, const uint64_t &guild_
 void
 DBAdapter::write_time_overall(const uint64_t &user_id, const uint64_t &guild_id, const uint64_t &session_time_length) {
     user_time_overall_map_[{user_id, guild_id}] += session_time_length;
-    spdlog::debug("write_time_overall {0}, {1}:  user_time_overall: {2}", user_id, guild_id, user_time_overall_map_[{user_id, guild_id}]);
+    spdlog::debug("write_time_overall {0}, {1}:  user_time_overall: {2}", user_id, guild_id,
+                  user_time_overall_map_[{user_id, guild_id}]);
 }
 
 void DBAdapter::stop_time_count(const uint64_t &user_id, const uint64_t &guild_id) {

@@ -16,20 +16,6 @@
 using std::string;
 using namespace sqlite_orm;
 
-struct UserMessages {
-    string user_id;
-    string guild_id;
-    uint32_t message_counter;
-    uint32_t word_counter;
-    uint32_t attachment_counter;
-};
-
-struct UserVoice {
-    string user_id;
-    string guild_id;
-    uint32_t voice_timer;
-};
-
 class DBAdapter {
 public:
     DBAdapter();
@@ -50,6 +36,21 @@ private:
     void write_time_overall(const uint64_t &user_id, const uint64_t &guild_id, const uint64_t &session_time_length);
 
     static uint64_t get_time_now();
+
+private:
+    struct UserMessages {
+        string user_id;
+        string guild_id;
+        uint32_t message_counter;
+        uint32_t word_counter;
+        uint32_t attachment_counter;
+    };
+
+    struct UserVoice {
+        string user_id;
+        string guild_id;
+        uint32_t voice_timer;
+    };
 
     std::map<ug_pair, uint64_t> user_connected_timestamp_map_;
     std::map<ug_pair, uint64_t> user_time_overall_map_;
