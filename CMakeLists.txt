@@ -16,7 +16,7 @@ add_executable(${PROJECT_NAME}
         # your others files...
         src/DBAdapter.cpp
         src/DBAdapter.h
-        src/DBCreator.h)
+        )
 
 # Linking libraries
 
