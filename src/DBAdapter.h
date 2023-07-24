@@ -11,6 +11,7 @@
 
 
 using std::string;
+using namespace sqlite_orm;
 
 struct UserMessages {
     string user_id;
@@ -25,16 +26,34 @@ struct UserVoice {
     string guild_id;
     uint32_t voice_timer;
 };
-template<typename... Arguments>
+
+auto make_storage_func(){
+    return make_storage("../my_bot_db",
+                        make_table("user_messages",
+                                   make_column("user_id", &UserMessages::user_id),
+                                   make_column("guild_id", &UserMessages::guild_id),
+                                   make_column("message_counter",
+                                               &UserMessages::message_counter),
+                                   make_column("word_counter", &UserMessages::word_counter),
+                                   make_column("embed_counter", &UserMessages::embed_counter),
+                                   primary_key(&UserMessages::user_id,
+                                               &UserMessages::guild_id)),
+                        make_table("user_voice",
+                                   make_column("user_id", &UserVoice::user_id),
+                                   make_column("guild_id", &UserVoice::guild_id),
+                                   make_column("message_counter", &UserVoice::voice_timer),
+                                   primary_key(&UserVoice::user_id, &UserVoice::guild_id))
+    );}
+
 class DBAdapter {
 public:
-    DBAdapter(sqlite_orm::internal::storage_t<> storage);
+    DBAdapter();
 
     void start_time_count(const uint64_t &user_id);
 
     void stop_time_count(const uint64_t &user_id);
 
-    void write_message_info(const uint64_t &user_id, const  std::size_t &msg_size);
+    void write_message_info(const uint64_t &user_id, const std::size_t &msg_size);
 
     bool in_connected(const uint64_t &user_id);
 
@@ -50,8 +69,8 @@ private:
     std::map<uint64_t, std::size_t> user_short_msg_;
     std::map<uint64_t, std::size_t> user_long_msg_;
     std::size_t min_msg_size_ = {10};
-    sqlite_orm::internal::storage_t<> storage_;
-};
 
+    inline static auto storage_{make_storage_func()};
+};
 
 #endif //DISCORD_BOT_DBADAPTER_H
