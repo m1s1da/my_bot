@@ -14,7 +14,9 @@ find_package(SqliteOrm REQUIRED)
 add_executable(${PROJECT_NAME}
         src/main.cpp
         # your others files...
-        src/DBAdapter.cpp src/DBAdapter.h)
+        src/DBAdapter.cpp
+        src/DBAdapter.h
+        src/DBCreator.h)
 
 # Linking libraries
 
