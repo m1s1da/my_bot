@@ -50,7 +50,28 @@ void DBAdapter::stop_time_count(const uint64_t &user_id, const uint64_t &guild_i
 void DBAdapter::write_message_info(const uint64_t &user_id, const uint64_t &guild_id, const string &msg, bool
 has_attachments) {
     const uint32_t word_counter = MessageChecker::getWordCounter(msg);
-    user_msg_[{user_id, guild_id}] += word_counter;
+
+//    insert into user_messages
+//    values ('test','test', 1, {word_counter}, {has_attachments})
+//    on conflict (user_id, guild_id)
+//    do update set
+//        message_counter = message_counter + 1,
+//        word_counter = word_counter + {word_counter},
+//        attachment_counter = attachment_counter + {has_attachments};
+    storage_.insert(
+            into<UserMessages>(),
+            columns(&UserMessages::user_id, &UserMessages::guild_id, &UserMessages::message_counter, &UserMessages::word_counter, &UserMessages::attachment_counter),
+            values(std::make_tuple(std::to_string(user_id), std::to_string(guild_id), word_counter, 1, has_attachments)),
+            on_conflict(&UserMessages::user_id, &UserMessages::guild_id)
+                    .do_update(set(assign(&UserMessages::message_counter, add(&UserMessages::message_counter, 1)),
+                                   assign(&UserMessages::word_counter, add(&UserMessages::word_counter, word_counter)),
+                                   assign(&UserMessages::attachment_counter, add(&UserMessages::attachment_counter, static_cast<uint32_t>(has_attachments))))));
+//    auto user_message = storage_.get<UserMessages>(std::to_string(user_id), std::to_string(guild_id));
+//    user_message.word_counter += word_counter;
+//    user_message.message_counter ++;
+//    user_message.attachment_counter += has_attachments;
+//    storage_.update(user_message);
+//    user_msg_[{user_id, guild_id}] += word_counter;
     spdlog::debug("message received from: {0}, {1} word_counter: {2} msg: {3}", user_id, guild_id, word_counter, msg);
 
 }
