@@ -31,7 +31,7 @@ int main() {
         if (event.command.get_command_name() == "white_list") {
             uint64_t guild_id = event.command.guild_id;
             uint64_t channel_id = std::get<dpp::snowflake>(event.get_parameter("text_channel"));
-            db_adapter.add_white_list(guild_id, channel_id);
+            db_adapter.add_to_white_list(guild_id, channel_id);
             event.reply("channel added to white list");
         }
     });

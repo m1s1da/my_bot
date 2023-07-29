@@ -11,7 +11,7 @@
 #include <string>
 #include <memory>
 
-#include "sqlite3.h"
+#include <SQLiteCpp/SQLiteCpp.h>
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 
@@ -33,19 +33,20 @@ public:
 
     bool in_connected(const uint64_t &user_id, const uint64_t &guild_id);
 
-    void add_white_list(const uint64_t &guild_id, const uint64_t &channel_id);
+    void add_to_white_list(const uint64_t &guild_id, const uint64_t &channel_id);
 
-    virtual ~DBAdapter();
+    void cash_white_list();
 
 private:
-    void write_time_overall(const uint64_t &user_id, const uint64_t &guild_id, const uint64_t &session_time_length);
+    void write_time_overall(const uint64_t &user_id, const uint64_t &guild_id, const uint32_t &session_time_length);
 
-    static uint64_t get_time_now();
+    static uint32_t get_time_now();
 
 private:
     std::map<ug_pair, uint64_t> user_connected_timestamp_map_;
+    std::map<uint64_t, std::vector<uint64_t>> white_list_;
 
-    sqlite3 *db_ = nullptr;
+    SQLite::Database db_;
     std::shared_ptr<spdlog::logger> err_logger_;
 };
 
