@@ -1,19 +1,18 @@
 create table user_messages
 (
-    user_id            TEXT    not null,
-    guild_id           TEXT    not null,
-    message_counter    INTEGER not null,
-    word_counter       INTEGER not null,
-    attachment_counter INTEGER not null,
-    primary key (user_id, guild_id)
+    user_id            TEXT,
+    guild_id           TEXT,
+    word_counter       INTEGER,
+    attachment_counter INTEGER,
+    timestamp          INTEGER
 );
 
 create table user_voice
 (
-    user_id      TEXT    not null,
-    guild_id     TEXT    not null,
-    time_counter INTEGER not null,
-    primary key (user_id, guild_id)
+    user_id      TEXT,
+    guild_id     TEXT,
+    time_counter INTEGER,
+    timestamp    INTEGER
 );
 
 create table white_lists

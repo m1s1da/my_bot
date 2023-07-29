@@ -30,15 +30,12 @@ void
 DBAdapter::write_time_overall(const uint64_t &user_id, const uint64_t &guild_id, const uint32_t &session_time_length) {
     const string query_str =
             "INSERT INTO user_voice "
-            "VALUES (?,?,?)"
-            "ON CONFLICT (user_id, guild_id) "
-            "DO UPDATE SET "
-            "time_counter = time_counter + ?";
+            "VALUES (?,?,?,?)";
     SQLite::Statement query(db_, query_str);
     query.bind(1, to_string(user_id));
     query.bind(2, to_string(guild_id));
     query.bind(3, session_time_length);
-    query.bind(4, session_time_length);
+    query.bind(4, get_time_now());
 
     try {
         query.exec();
@@ -66,19 +63,13 @@ has_attachments) {
     const uint32_t word_counter = MessageChecker::getWordCounter(msg);
     const string query_str =
             "INSERT INTO user_messages "
-            "VALUES (?,?,1,?,?)"
-            "ON CONFLICT (user_id, guild_id) "
-            "DO UPDATE SET "
-            "message_counter = message_counter + 1,"
-            "word_counter = word_counter + ?,"
-            "attachment_counter = attachment_counter + ?";
+            "VALUES (?,?,?,?,?)";
     SQLite::Statement query(db_, query_str);
     query.bind(1, to_string(user_id));
     query.bind(2, to_string(guild_id));
     query.bind(3, word_counter);
     query.bind(4, static_cast<int>(has_attachments));
-    query.bind(5, word_counter);
-    query.bind(6, static_cast<int>(has_attachments));
+    query.bind(5, get_time_now());
     try {
         query.exec();
     }
