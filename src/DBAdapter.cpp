@@ -103,3 +103,17 @@ void DBAdapter::flush_time_count() {
     }
     spdlog::debug("flush_time_count completed");
 }
+
+void DBAdapter::add_white_list(const uint64_t &guild_id, const uint64_t &channel_id) {
+    const string query =
+            "INSERT INTO white_lists VALUES ("
+            "'" + to_string(guild_id) + "',"
+            "'" + to_string(channel_id) +"');";
+    char *err = 0;
+    if (sqlite3_exec(db_, query.c_str(), 0, 0, &err))
+    {
+        spdlog::get("err_logger_")->error("write_message_info query error {}", err);
+        sqlite3_free(err);
+    }
+    spdlog::debug("add_white_list");
+}

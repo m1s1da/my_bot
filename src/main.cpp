@@ -19,15 +19,20 @@ int main() {
 
     bot.on_ready([&bot](const dpp::ready_t &event) {
         if (dpp::run_once<struct register_bot_commands>()) {
-            bot.global_command_create(
-                    dpp::slashcommand("ping", "Ping pong!", bot.me.id)
-            );
+            dpp::slashcommand white_list("white_list", "Choose text channels", bot.me.id);
+            white_list.add_option(
+                    dpp::command_option(dpp::co_channel, "text_channel", "Choose an channel", true).add_channel_type(
+                            dpp::CHANNEL_TEXT));
+            bot.global_command_create(white_list);
         }
     });
 
-    bot.on_slashcommand([](const dpp::slashcommand_t &event) {
-        if (event.command.get_command_name() == "ping") {
-            event.reply("Pong!");
+    bot.on_slashcommand([&db_adapter](const dpp::slashcommand_t &event) {
+        if (event.command.get_command_name() == "white_list") {
+            uint64_t guild_id = event.command.guild_id;
+            uint64_t channel_id = std::get<dpp::snowflake>(event.get_parameter("text_channel"));
+            db_adapter.add_white_list(guild_id, channel_id);
+            event.reply("channel added to white list");
         }
     });
 
@@ -62,11 +67,12 @@ int main() {
         db_adapter.write_message_info(user_id, guild_id, msg, has_attachments);
     });
 
-    bot.start_timer([&db_adapter](dpp::timer
-                                  timer) {
+    bot.start_timer([&db_adapter](dpp::timer timer) {
         db_adapter.flush_time_count();
     }, 300, [](dpp::timer
-               timer) { spdlog::debug("timer stoped"); });
+               timer) {
+        spdlog::debug("timer stoped");
+    });
 
     bot.start(dpp::st_wait);
 }

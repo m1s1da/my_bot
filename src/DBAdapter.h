@@ -33,6 +33,8 @@ public:
 
     bool in_connected(const uint64_t &user_id, const uint64_t &guild_id);
 
+    void add_white_list(const uint64_t &guild_id, const uint64_t &channel_id);
+
     virtual ~DBAdapter();
 
 private:
@@ -41,20 +43,6 @@ private:
     static uint64_t get_time_now();
 
 private:
-//    struct UserMessages {
-//        string user_id;
-//        string guild_id;
-//        uint32_t message_counter;
-//        uint32_t word_counter;
-//        uint32_t attachment_counter;
-//    };
-//
-//    struct UserVoice {
-//        string user_id;
-//        string guild_id;
-//        uint32_t voice_timer;
-//    };
-
     std::map<ug_pair, uint64_t> user_connected_timestamp_map_;
 
     sqlite3 *db_ = nullptr;
