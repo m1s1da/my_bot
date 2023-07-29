@@ -62,5 +62,11 @@ int main() {
         db_adapter.write_message_info(user_id, guild_id, msg, has_attachments);
     });
 
+    bot.start_timer([&db_adapter](dpp::timer
+                                  timer) {
+        db_adapter.flush_time_count();
+    }, 300, [](dpp::timer
+               timer) { spdlog::debug("timer stoped"); });
+
     bot.start(dpp::st_wait);
 }

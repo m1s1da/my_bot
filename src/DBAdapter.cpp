@@ -94,3 +94,12 @@ bool DBAdapter::in_connected(const uint64_t &user_id, const uint64_t &guild_id) 
 DBAdapter::~DBAdapter() {
     sqlite3_close(db_);
 }
+
+void DBAdapter::flush_time_count() {
+    for (auto &[user_and_guild, timestamp]:user_connected_timestamp_map_) {
+        const uint64_t session_time_length = get_time_now() - timestamp;
+        timestamp = get_time_now();
+        write_time_overall(user_and_guild.first, user_and_guild.second, session_time_length);
+    }
+    spdlog::debug("flush_time_count completed");
+}

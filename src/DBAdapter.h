@@ -27,6 +27,8 @@ public:
 
     void stop_time_count(const uint64_t &user_id, const uint64_t &guild_id);
 
+    void flush_time_count();
+
     void write_message_info(const uint64_t &user_id, const uint64_t &guild_id, const string &msg, bool has_attachments);
 
     bool in_connected(const uint64_t &user_id, const uint64_t &guild_id);
