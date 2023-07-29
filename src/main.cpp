@@ -63,8 +63,11 @@ int main() {
         const auto msg = event.msg.content;
         const auto user_id = static_cast<uint64_t>(event.msg.author.id);
         const auto guild_id = static_cast<uint64_t>(event.msg.guild_id);
+        const auto channel_id = static_cast<uint64_t>(event.msg.channel_id);
         const bool has_attachments = !event.msg.attachments.empty();
-        db_adapter.write_message_info(user_id, guild_id, msg, has_attachments);
+        if(db_adapter.in_whitelist(guild_id, channel_id)){
+            db_adapter.write_message_info(user_id, guild_id, msg, has_attachments);
+        }
     });
 
     bot.start_timer([&db_adapter](dpp::timer timer) {

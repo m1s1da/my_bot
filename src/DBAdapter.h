@@ -37,6 +37,8 @@ public:
 
     void cash_white_list();
 
+    bool in_whitelist(const uint64_t &guild_id, const uint64_t &channel_id);
+
 private:
     void write_time_overall(const uint64_t &user_id, const uint64_t &guild_id, const uint32_t &session_time_length);
 

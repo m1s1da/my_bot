@@ -6,7 +6,6 @@
 #include <chrono>
 #include "dotenv.h"
 
-
 #include "MessageChecker.h"
 
 using std::to_string;
@@ -22,7 +21,6 @@ uint32_t DBAdapter::get_time_now() {
             ptr.time_since_epoch()).count();
 }
 
-// TODO: вызывать пару методов start/stop по таймауту
 void DBAdapter::start_time_count(const uint64_t &user_id, const uint64_t &guild_id) {
     user_connected_timestamp_map_[{user_id, guild_id}] = get_time_now();
     spdlog::debug("start_time_count {0}, {1}:  time: {2}", user_id, guild_id, get_time_now());
@@ -112,12 +110,12 @@ void DBAdapter::add_to_white_list(const uint64_t &guild_id, const uint64_t &chan
     query.bind(2, to_string(channel_id));
     try {
         query.exec();
+        white_list_[guild_id].push_back(channel_id);
     }
     catch (std::exception &e) {
         spdlog::error("add_to_white_list: {}", e.what());
     }
     spdlog::debug("add_to_white_list");
-    cash_white_list();
 }
 
 void DBAdapter::cash_white_list() {
@@ -139,4 +137,14 @@ void DBAdapter::cash_white_list() {
     catch (std::exception &e) {
         spdlog::error("cash_white_list: {}", e.what());
     }
+    spdlog::debug("cash_white_list");
+}
+
+bool DBAdapter::in_whitelist(const uint64_t &guild_id, const uint64_t &channel_id) {
+    auto it_guild = white_list_.find(guild_id);
+    if (it_guild == white_list_.end()) {
+        return true;
+    }
+    auto it_channel = std::find(it_guild->second.begin(), it_guild->second.end(), channel_id);
+    return it_channel != it_guild->second.end();
 }
