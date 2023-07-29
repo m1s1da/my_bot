@@ -10,7 +10,8 @@
 #include "MessageChecker.h"
 
 using std::to_string;
-DBAdapter::DBAdapter(const string &db_path) : db_(db_path) {
+
+DBAdapter::DBAdapter(const string &db_path) : db_(db_path, SQLite::OPEN_READWRITE) {
     spdlog::info("DB is ready");
     cash_white_list();
 }
@@ -95,7 +96,7 @@ bool DBAdapter::in_connected(const uint64_t &user_id, const uint64_t &guild_id) 
 }
 
 void DBAdapter::flush_time_count() {
-    for (auto &[user_and_guild, timestamp]:user_connected_timestamp_map_) {
+    for (auto &[user_and_guild, timestamp]: user_connected_timestamp_map_) {
         const uint32_t session_time_length = get_time_now() - timestamp;
         timestamp = get_time_now();
         write_time_overall(user_and_guild.first, user_and_guild.second, session_time_length);
@@ -123,14 +124,19 @@ void DBAdapter::cash_white_list() {
     const string query_str =
             "SELECT * FROM white_lists;";
     SQLite::Statement query(db_, query_str);
-    while (query.executeStep()) {
-        uint64_t guild_id = std::stoull(query.getColumn(0));
-        uint64_t channel_id = std::stoull(query.getColumn(1));
-        auto it = white_list_.find(guild_id);
-        if (it == white_list_.end()) {
-            white_list_.emplace(guild_id, std::vector<uint64_t>{channel_id});
-        } else {
-            it->second.push_back(channel_id);
+    try {
+        while (query.executeStep()) {
+            uint64_t guild_id = std::stoull(query.getColumn(0));
+            uint64_t channel_id = std::stoull(query.getColumn(1));
+            auto it = white_list_.find(guild_id);
+            if (it == white_list_.end()) {
+                white_list_.emplace(guild_id, std::vector<uint64_t>{channel_id});
+            } else {
+                it->second.push_back(channel_id);
+            }
         }
+    }
+    catch (std::exception &e) {
+        spdlog::error("cash_white_list: {}", e.what());
     }
 }

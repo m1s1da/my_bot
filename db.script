@@ -15,3 +15,11 @@ create table user_voice
     time_counter INTEGER not null,
     primary key (user_id, guild_id)
 );
+
+create table white_lists
+(
+    guild_id   TEXT,
+    channel_id TEXT,
+    constraint table_name_pk
+        unique (guild_id, channel_id) on conflict ignore
+);
