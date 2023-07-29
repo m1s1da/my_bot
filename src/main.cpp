@@ -14,7 +14,7 @@ int main() {
     auto &dotenv = dotenv::env.load_dotenv("../.env", true);
     dpp::cluster bot(dotenv["BOT_TOKEN"], dpp::i_default_intents | dpp::i_message_content);
 
-    DBAdapter db_adapter;
+    DBAdapter db_adapter(dotenv["DB_PATH"]);
     bot.on_log(dpp::utility::cout_logger());
 
     bot.on_ready([&bot](const dpp::ready_t &event) {

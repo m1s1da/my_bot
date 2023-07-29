@@ -9,16 +9,17 @@
 #include <cstdint>
 #include <utility>
 #include <string>
+#include <memory>
 
-#include <sqlite_orm/sqlite_orm.h>
-
+#include "sqlite3.h"
+#include "spdlog/spdlog.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
 
 using std::string;
-using namespace sqlite_orm;
 
 class DBAdapter {
 public:
-    DBAdapter();
+    DBAdapter(const string &db_path);
 
     using ug_pair = std::pair<uint64_t, uint64_t>;
 
@@ -38,41 +39,24 @@ private:
     static uint64_t get_time_now();
 
 private:
-    struct UserMessages {
-        string user_id;
-        string guild_id;
-        uint32_t message_counter;
-        uint32_t word_counter;
-        uint32_t attachment_counter;
-    };
-
-    struct UserVoice {
-        string user_id;
-        string guild_id;
-        uint32_t voice_timer;
-    };
+//    struct UserMessages {
+//        string user_id;
+//        string guild_id;
+//        uint32_t message_counter;
+//        uint32_t word_counter;
+//        uint32_t attachment_counter;
+//    };
+//
+//    struct UserVoice {
+//        string user_id;
+//        string guild_id;
+//        uint32_t voice_timer;
+//    };
 
     std::map<ug_pair, uint64_t> user_connected_timestamp_map_;
-    std::map<ug_pair, uint64_t> user_time_overall_map_;
-    std::map<ug_pair, std::size_t> user_msg_;
 
-    inline static auto storage_{make_storage("../my_bot_db",
-                                             make_table("user_messages",
-                                                        make_column("user_id", &UserMessages::user_id),
-                                                        make_column("guild_id", &UserMessages::guild_id),
-                                                        make_column("message_counter",
-                                                                    &UserMessages::message_counter),
-                                                        make_column("word_counter", &UserMessages::word_counter),
-                                                        make_column("attachment_counter",
-                                                                    &UserMessages::attachment_counter),
-                                                        primary_key(&UserMessages::user_id,
-                                                                    &UserMessages::guild_id)),
-                                             make_table("user_voice",
-                                                        make_column("user_id", &UserVoice::user_id),
-                                                        make_column("guild_id", &UserVoice::guild_id),
-                                                        make_column("message_counter", &UserVoice::voice_timer),
-                                                        primary_key(&UserVoice::user_id, &UserVoice::guild_id))
-    )};
+    sqlite3 *db_ = nullptr;
+    std::shared_ptr<spdlog::logger> err_logger_;
 };
 
 #endif //DISCORD_BOT_DBADAPTER_H

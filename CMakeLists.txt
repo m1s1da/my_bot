@@ -8,7 +8,7 @@ add_subdirectory(libs/DPP)
 add_subdirectory(libs/spdlog)
 add_subdirectory(libs/cpp-dotenv)
 
-find_package(SqliteOrm REQUIRED)
+find_package(SQLite3 REQUIRED)
 
 # Create an executable
 add_executable(${PROJECT_NAME}
@@ -16,15 +16,18 @@ add_executable(${PROJECT_NAME}
         # your others files...
         src/DBAdapter.cpp
         src/DBAdapter.h
-        src/MessageChecker.cpp src/MessageChecker.h)
+        src/MessageChecker.cpp
+        src/MessageChecker.h
+        ${SQLite3_INCLUDE_DIRS}
+        )
 
 # Linking libraries
 
-target_link_libraries(${PROJECT_NAME} PRIVATE
+target_link_libraries(${PROJECT_NAME}
         dpp
         spdlog
         cpp_dotenv
-        sqlite_orm::sqlite_orm
+        SQLite::SQLite3
         )
 #target_link_libraries(${PROJECT_NAME} PRIVATE sqlite_orm::sqlite_orm)
 
@@ -36,6 +39,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 
 # Set C++ version
 set_target_properties(${PROJECT_NAME} PROPERTIES
-        CXX_STANDARD 17
+        CXX_STANDARD 20
         CXX_STANDARD_REQUIRED ON
         )
