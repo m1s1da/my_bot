@@ -1,0 +1,17 @@
+create table user_messages
+(
+    user_id            TEXT    not null,
+    guild_id           TEXT    not null,
+    message_counter    INTEGER not null,
+    word_counter       INTEGER not null,
+    attachment_counter INTEGER not null,
+    primary key (user_id, guild_id)
+);
+
+create table user_voice
+(
+    user_id      TEXT    not null,
+    guild_id     TEXT    not null,
+    time_counter INTEGER not null,
+    primary key (user_id, guild_id)
+);
