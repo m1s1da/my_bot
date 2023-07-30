@@ -15,13 +15,20 @@
 #include "spdlog/spdlog.h"
 #include <SQLiteCpp/SQLiteCpp.h>
 
+//#define SECOND_COST 1
+//#define WORD_COST SECOND_COST * 60 * 10
+//#define ATTACHMENT_COST WORD_COST * 3
+
+using std::map;
+using std::pair;
 using std::string;
+using std::vector;
 
 class DBAdapter {
 public:
   DBAdapter(const string &db_path);
 
-  using ug_pair = std::pair<uint64_t, uint64_t>;
+  using u_points = map<uint64_t, vector<pair<uint64_t, uint32_t>>>;
 
   void start_time_count(const uint64_t &user_id, const uint64_t &guild_id);
 
@@ -41,21 +48,18 @@ public:
 
   bool in_whitelist(const uint64_t &guild_id, const uint64_t &channel_id);
 
-public:
-  struct User {
-    uint64_t user_id;
-    uint32_t word_counter = 0;
-    uint32_t attachment_counter = 0;
-    uint32_t time_counter = 0;
-    bool operator==(const uint64_t &other);
-  };
-
-  std::map<uint64_t, std::vector<User>> users_data_;
+  const u_points *calculate_user_points();
 
 private:
   void cash_white_list();
 
-  void cash_user_info();
+  void calculate_message_points(const uint64_t &user_id,
+                                const uint64_t &guild_id,
+                                const uint32_t &word_counter,
+                                const uint32_t &attachment_counter);
+
+  void calculate_voice_points(const uint64_t &user_id, const uint64_t &guild_id,
+                              const uint32_t &time_counter);
 
   void write_time_overall(const uint64_t &user_id, const uint64_t &guild_id,
                           const uint32_t &session_time_length);
@@ -63,11 +67,15 @@ private:
   static uint32_t get_time_now();
 
 private:
-  std::map<ug_pair, uint64_t> user_connected_timestamp_map_;
-  std::map<uint64_t, std::vector<uint64_t>> white_list_;
-
   SQLite::Database db_;
-  std::shared_ptr<spdlog::logger> err_logger_;
+
+  map<pair<uint64_t, uint64_t>, uint64_t> user_connected_timestamp_map_;
+  map<uint64_t, vector<uint64_t>> white_list_;
+  u_points user_points_;
+
+  uint32_t SECOND_COST;
+  uint32_t WORD_COST;
+  uint32_t ATTACHMENT_COST;
 };
 
 #endif // DISCORD_BOT_DBADAPTER_H

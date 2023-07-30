@@ -13,6 +13,14 @@ using std::to_string;
 DBAdapter::DBAdapter(const string &db_path)
     : db_(db_path, SQLite::OPEN_READWRITE) {
   spdlog::info("DB is ready");
+  auto &dotenv = dotenv::env.instance();
+  SECOND_COST =
+      dotenv["SECOND_COST"].empty() ? 1 : std::stoul(dotenv["SECOND_COST"]);
+  WORD_COST = dotenv["WORD_COST"].empty() ? SECOND_COST * 60 * 10
+                                          : std::stoul(dotenv["WORD_COST"]);
+  ATTACHMENT_COST = dotenv["ATTACHMENT_COST"].empty()
+                        ? WORD_COST * 3
+                        : std::stoul(dotenv["ATTACHMENT_COST"]);
   cash_white_list();
 }
 
@@ -169,23 +177,23 @@ void DBAdapter::delete_from_white_list(const uint64_t &guild_id,
   spdlog::debug("delete_from_white_list");
 }
 
-void DBAdapter::cash_user_info() {
-  users_data_.clear();
+const DBAdapter::u_points *DBAdapter::calculate_user_points() {
+  user_points_.clear();
   string query_str =
       "SELECT user_id, guild_id, SUM(word_counter), SUM(attachment_counter) "
       "FROM user_messages GROUP BY user_id, guild_id";
   SQLite::Statement query_msg(db_, query_str);
   try {
     while (query_msg.executeStep()) {
-      User user;
-      user.user_id = std::stoull(query_msg.getColumn(0));
+      const uint64_t user_id = std::stoull(query_msg.getColumn(0));
       const uint64_t guild_id = std::stoull(query_msg.getColumn(1));
-      user.word_counter = std::stoul(query_msg.getColumn(2));
-      user.attachment_counter = std::stoul(query_msg.getColumn(3));
-      users_data_[guild_id].push_back(user);
+      const uint32_t word_counter = std::stoul(query_msg.getColumn(2));
+      const uint32_t attachment_counter = std::stoul(query_msg.getColumn(3));
+      calculate_message_points(user_id, guild_id, word_counter,
+                               attachment_counter);
     }
   } catch (std::exception &e) {
-    spdlog::error("cash_user_info: {}", e.what());
+    spdlog::error("calculate_user_points: {}", e.what());
   }
 
   query_str = "SELECT user_id, guild_id, SUM(time_counter) FROM user_voice "
@@ -193,25 +201,44 @@ void DBAdapter::cash_user_info() {
   SQLite::Statement query_voice(db_, query_str);
   try {
     while (query_voice.executeStep()) {
-      uint64_t user_id = std::stoull(query_voice.getColumn(0));
+      const uint64_t user_id = std::stoull(query_voice.getColumn(0));
       const uint64_t guild_id = std::stoull(query_voice.getColumn(1));
-      uint64_t time_counter = std::stoul(query_voice.getColumn(2));
-      auto &guild = users_data_[guild_id];
-      auto it = std::find(guild.begin(), guild.end(), user_id);
-      if (it == guild.end()) {
-        User user;
-        user.user_id = user_id;
-        user.time_counter = time_counter;
-        guild.push_back(user);
-      } else {
-        it->time_counter = time_counter;
-      }
+      const uint32_t time_counter = std::stoul(query_voice.getColumn(2));
+      calculate_voice_points(user_id, guild_id, time_counter);
     }
   } catch (std::exception &e) {
-    spdlog::error("cash_user_info: {}", e.what());
+    spdlog::error("calculate_user_points: {}", e.what());
   }
+  return &user_points_;
 }
 
-bool DBAdapter::User::operator==(const uint64_t &other) {
-  return user_id == other;
+void DBAdapter::calculate_message_points(const uint64_t &user_id,
+                                         const uint64_t &guild_id,
+                                         const uint32_t &word_counter,
+                                         const uint32_t &attachment_counter) {
+  auto &guild = user_points_[guild_id];
+  auto it = std::find_if(
+      guild.begin(), guild.end(),
+      [&user_id](pair<uint64_t, uint32_t> &x) { return user_id == x.first; });
+  auto points = word_counter * WORD_COST + attachment_counter * ATTACHMENT_COST;
+  if (it == guild.end()) {
+    guild.push_back({user_id, points});
+    return;
+  }
+  it->second += points;
+}
+
+void DBAdapter::calculate_voice_points(const uint64_t &user_id,
+                                       const uint64_t &guild_id,
+                                       const uint32_t &time_counter) {
+  auto &guild = user_points_[guild_id];
+  auto it = std::find_if(
+      guild.begin(), guild.end(),
+      [&user_id](pair<uint64_t, uint32_t> &x) { return user_id == x.first; });
+  auto points = time_counter * SECOND_COST;
+  if (it == guild.end()) {
+    guild.push_back({user_id, points});
+    return;
+  }
+  it->second += points;
 }
