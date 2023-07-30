@@ -15,9 +15,6 @@
 #include "spdlog/spdlog.h"
 #include <SQLiteCpp/SQLiteCpp.h>
 
-//#define SECOND_COST 1
-//#define WORD_COST SECOND_COST * 60 * 10
-//#define ATTACHMENT_COST WORD_COST * 3
 
 using std::map;
 using std::pair;
