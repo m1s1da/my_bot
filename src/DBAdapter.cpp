@@ -209,6 +209,14 @@ const DBAdapter::u_points *DBAdapter::calculate_user_points() {
   } catch (std::exception &e) {
     spdlog::error("calculate_user_points: {}", e.what());
   }
+
+  for (auto &[guild, users] : user_points_) {
+    std::sort(users.end(), users.begin(),
+              [](pair<u_int64_t, uint32_t> &x, pair<u_int64_t, uint32_t> &y) {
+                return x.second < y.second;
+              });
+  }
+
   return &user_points_;
 }
 
