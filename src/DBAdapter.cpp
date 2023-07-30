@@ -168,3 +168,50 @@ void DBAdapter::delete_from_white_list(const uint64_t &guild_id,
   }
   spdlog::debug("delete_from_white_list");
 }
+
+void DBAdapter::cash_user_info() {
+  users_data_.clear();
+  string query_str =
+      "SELECT user_id, guild_id, SUM(word_counter), SUM(attachment_counter) "
+      "FROM user_messages GROUP BY user_id, guild_id";
+  SQLite::Statement query_msg(db_, query_str);
+  try {
+    while (query_msg.executeStep()) {
+      User user;
+      user.user_id = std::stoull(query_msg.getColumn(0));
+      const uint64_t guild_id = std::stoull(query_msg.getColumn(1));
+      user.word_counter = std::stoul(query_msg.getColumn(2));
+      user.attachment_counter = std::stoul(query_msg.getColumn(3));
+      users_data_[guild_id].push_back(user);
+    }
+  } catch (std::exception &e) {
+    spdlog::error("cash_user_info: {}", e.what());
+  }
+
+  query_str = "SELECT user_id, guild_id, SUM(time_counter) FROM user_voice "
+              "GROUP BY user_id, guild_id";
+  SQLite::Statement query_voice(db_, query_str);
+  try {
+    while (query_voice.executeStep()) {
+      uint64_t user_id = std::stoull(query_voice.getColumn(0));
+      const uint64_t guild_id = std::stoull(query_voice.getColumn(1));
+      uint64_t time_counter = std::stoul(query_voice.getColumn(2));
+      auto &guild = users_data_[guild_id];
+      auto it = std::find(guild.begin(), guild.end(), user_id);
+      if (it == guild.end()) {
+        User user;
+        user.user_id = user_id;
+        user.time_counter = time_counter;
+        guild.push_back(user);
+      } else {
+        it->time_counter = time_counter;
+      }
+    }
+  } catch (std::exception &e) {
+    spdlog::error("cash_user_info: {}", e.what());
+  }
+}
+
+bool DBAdapter::User::operator==(const uint64_t &other) {
+  return user_id == other;
+}

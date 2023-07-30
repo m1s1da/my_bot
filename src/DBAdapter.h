@@ -36,13 +36,27 @@ public:
 
   void add_to_white_list(const uint64_t &guild_id, const uint64_t &channel_id);
 
-  void delete_from_white_list(const uint64_t &guild_id, const uint64_t &channel_id);
-
-  void cash_white_list();
+  void delete_from_white_list(const uint64_t &guild_id,
+                              const uint64_t &channel_id);
 
   bool in_whitelist(const uint64_t &guild_id, const uint64_t &channel_id);
 
+public:
+  struct User {
+    uint64_t user_id;
+    uint32_t word_counter = 0;
+    uint32_t attachment_counter = 0;
+    uint32_t time_counter = 0;
+    bool operator==(const uint64_t &other);
+  };
+
+  std::map<uint64_t, std::vector<User>> users_data_;
+
 private:
+  void cash_white_list();
+
+  void cash_user_info();
+
   void write_time_overall(const uint64_t &user_id, const uint64_t &guild_id,
                           const uint32_t &session_time_length);
 
