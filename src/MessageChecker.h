@@ -7,14 +7,12 @@
 
 #include <string>
 
-
 using std::string;
 
 class MessageChecker {
 public:
-    static uint32_t getWordCounter(const string &msg);
-    static bool isEmoji(const string &word);
+  static uint32_t getWordCounter(const string &msg);
+  static bool isEmoji(const string &word);
 };
 
-
-#endif //DISCORD_BOT_MESSAGECHECKER_H
+#endif // DISCORD_BOT_MESSAGECHECKER_H
