@@ -53,7 +53,7 @@ int main() {
         return;
       }
       db_adapter.delete_from_white_list(guild_id, channel_id);
-      event.reply("channel deleted from to white list");
+      event.reply("channel deleted from white list");
     }
   });
 
