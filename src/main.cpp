@@ -21,22 +21,30 @@ int main() {
   bot.on_ready([&bot](const dpp::ready_t &event) {
     if (dpp::run_once<struct register_bot_commands>()) {
       dpp::slashcommand add_white_list("add_white_list", "Choose text channels",
-                                   bot.me.id);
-      add_white_list.add_option(dpp::command_option(dpp::co_channel, "text_channel",
-                                                "Choose an channel", true)
-                                .add_channel_type(dpp::CHANNEL_TEXT));
-      bot.global_command_create(add_white_list);
-
-      dpp::slashcommand delete_white_list("delete_white_list", "Choose text channels",
                                        bot.me.id);
-      delete_white_list.add_option(dpp::command_option(dpp::co_channel, "text_channel",
+      add_white_list.add_option(dpp::command_option(dpp::co_channel,
+                                                    "text_channel",
                                                     "Choose an channel", true)
                                     .add_channel_type(dpp::CHANNEL_TEXT));
+      bot.global_command_create(add_white_list);
+
+      dpp::slashcommand delete_white_list("delete_white_list",
+                                          "Choose text channels", bot.me.id);
+      delete_white_list.add_option(
+          dpp::command_option(dpp::co_channel, "text_channel",
+                              "Choose an channel", true)
+              .add_channel_type(dpp::CHANNEL_TEXT));
       bot.global_command_create(delete_white_list);
     }
   });
 
   bot.on_slashcommand([&db_adapter](const dpp::slashcommand_t &event) {
+    //```cpp
+    // event.reply(
+    //    dpp::message(event.command.channel_id,
+    //    embed).set_flags(dpp::m_ephemeral)
+    //);
+    //```
     if (event.command.get_command_name() == "add_white_list") {
       uint64_t guild_id = event.command.guild_id;
       uint64_t channel_id =
@@ -102,8 +110,21 @@ int main() {
   });
 
   bot.start_timer(
-      [&db_adapter](dpp::timer timer) { db_adapter.flush_time_count(); }, 300,
-      [](dpp::timer timer) { spdlog::debug("timer stoped"); });
+      [&db_adapter, &bot](dpp::timer timer) {
+        db_adapter.flush_time_count();
+        auto *temp = db_adapter.calculate_user_points();
+        for (const auto &[guild, user_and_points] : *temp) {
+
+          string guild_name = dpp::find_guild(guild)->name;
+          for (const auto &[user, points] : user_and_points) {
+            dpp::user_identified targetID = bot.user_get_sync(user);
+            string user_name = targetID.format_username();
+            spdlog::debug("On server {0} {1} has {2} points", guild_name,
+                          user_name, points);
+          }
+        }
+      },
+      300, [](dpp::timer timer) { spdlog::debug("timer stoped"); });
 
   bot.start(dpp::st_wait);
 }

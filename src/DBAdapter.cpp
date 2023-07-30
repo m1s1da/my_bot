@@ -8,6 +8,7 @@
 
 #include "MessageChecker.h"
 
+#define DB_ADAPTER_MONTH 2592000
 using std::to_string;
 
 DBAdapter::DBAdapter(const string &db_path)
@@ -16,7 +17,7 @@ DBAdapter::DBAdapter(const string &db_path)
   auto &dotenv = dotenv::env.instance();
   SECOND_COST =
       dotenv["SECOND_COST"].empty() ? 1 : std::stoul(dotenv["SECOND_COST"]);
-  WORD_COST = dotenv["WORD_COST"].empty() ? SECOND_COST * 60 * 10
+  WORD_COST = dotenv["WORD_COST"].empty() ? SECOND_COST * 150
                                           : std::stoul(dotenv["WORD_COST"]);
   ATTACHMENT_COST = dotenv["ATTACHMENT_COST"].empty()
                         ? WORD_COST * 3
@@ -181,8 +182,10 @@ const DBAdapter::u_points *DBAdapter::calculate_user_points() {
   user_points_.clear();
   string query_str =
       "SELECT user_id, guild_id, SUM(word_counter), SUM(attachment_counter) "
-      "FROM user_messages GROUP BY user_id, guild_id";
+      "FROM user_messages WHERE timestamp > ? "
+      "GROUP BY user_id, guild_id";
   SQLite::Statement query_msg(db_, query_str);
+  query_msg.bind(1, get_time_now() - DB_ADAPTER_MONTH);
   try {
     while (query_msg.executeStep()) {
       const uint64_t user_id = std::stoull(query_msg.getColumn(0));
@@ -196,9 +199,11 @@ const DBAdapter::u_points *DBAdapter::calculate_user_points() {
     spdlog::error("calculate_user_points: {}", e.what());
   }
 
-  query_str = "SELECT user_id, guild_id, SUM(time_counter) FROM user_voice "
+  query_str = "SELECT user_id, guild_id, SUM(time_counter) "
+              "FROM user_voice WHERE timestamp > ? "
               "GROUP BY user_id, guild_id";
   SQLite::Statement query_voice(db_, query_str);
+  query_voice.bind(1, get_time_now() - DB_ADAPTER_MONTH);
   try {
     while (query_voice.executeStep()) {
       const uint64_t user_id = std::stoull(query_voice.getColumn(0));
@@ -211,9 +216,9 @@ const DBAdapter::u_points *DBAdapter::calculate_user_points() {
   }
 
   for (auto &[guild, users_and_points] : user_points_) {
-    std::sort(users_and_points.end(), users_and_points.begin(),
+    std::sort(users_and_points.begin(), users_and_points.end(),
               [](pair<u_int64_t, uint32_t> &x, pair<u_int64_t, uint32_t> &y) {
-                return x.second < y.second;
+                return x.second > y.second;
               });
   }
 
