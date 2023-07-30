@@ -39,29 +39,26 @@ int main() {
   });
 
   bot.on_slashcommand([&db_adapter](const dpp::slashcommand_t &event) {
-    //```cpp
-    // event.reply(
-    //    dpp::message(event.command.channel_id,
-    //    embed).set_flags(dpp::m_ephemeral)
-    //);
-    //```
     if (event.command.get_command_name() == "add_white_list") {
       uint64_t guild_id = event.command.guild_id;
       uint64_t channel_id =
           std::get<dpp::snowflake>(event.get_parameter("text_channel"));
       db_adapter.add_to_white_list(guild_id, channel_id);
-      event.reply("channel added to white list");
+      event.reply(dpp::message("channel added to white list")
+                      .set_flags(dpp::m_ephemeral));
     }
     if (event.command.get_command_name() == "delete_white_list") {
       uint64_t guild_id = event.command.guild_id;
       uint64_t channel_id =
           std::get<dpp::snowflake>(event.get_parameter("text_channel"));
       if (!db_adapter.in_whitelist(guild_id, channel_id)) {
-        event.reply("error: channel not in white list");
+        event.reply(dpp::message("ERROR: channel not in white list")
+                        .set_flags(dpp::m_ephemeral));
         return;
       }
       db_adapter.delete_from_white_list(guild_id, channel_id);
-      event.reply("channel deleted from white list");
+      event.reply(dpp::message("channel deleted from white list")
+                      .set_flags(dpp::m_ephemeral));
     }
   });
 
