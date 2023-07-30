@@ -66,10 +66,11 @@ int main() {
   });
 
   bot.on_voice_state_update(
-      [&db_adapter](const dpp::voice_state_update_t &event) {
+      [&db_adapter, &bot](const dpp::voice_state_update_t &event) {
         const auto user_id = static_cast<uint64_t>(event.state.user_id);
         const auto guild_id = static_cast<uint64_t>(event.state.guild_id);
-        if (dpp::find_user(user_id)->is_bot()) {
+        dpp::user_identified user = bot.user_get_sync(user_id);
+        if (user.is_bot()) {
           return;
         }
         if (!event.state.channel_id.empty()) {
@@ -117,8 +118,8 @@ int main() {
 
           string guild_name = dpp::find_guild(guild)->name;
           for (const auto &[user, points] : user_and_points) {
-            dpp::user_identified targetID = bot.user_get_sync(user);
-            string user_name = targetID.format_username();
+            dpp::user_identified user_identified = bot.user_get_sync(user);
+            string user_name = user_identified.format_username();
             spdlog::debug("On server {0} {1} has {2} points", guild_name,
                           user_name, points);
           }
