@@ -81,7 +81,7 @@ has_attachments) {
 }
 
 bool DBAdapter::in_connected(const uint64_t &user_id, const uint64_t &guild_id) {
-    return user_connected_timestamp_map_.find({user_id, guild_id}) != user_connected_timestamp_map_.end();
+    return user_connected_timestamp_map_.contains({user_id, guild_id});
 }
 
 void DBAdapter::flush_time_count() {
@@ -115,14 +115,9 @@ void DBAdapter::cash_white_list() {
     SQLite::Statement query(db_, query_str);
     try {
         while (query.executeStep()) {
-            uint64_t guild_id = std::stoull(query.getColumn(0));
-            uint64_t channel_id = std::stoull(query.getColumn(1));
-            auto it = white_list_.find(guild_id);
-            if (it == white_list_.end()) {
-                white_list_.emplace(guild_id, std::vector<uint64_t>{channel_id});
-            } else {
-                it->second.push_back(channel_id);
-            }
+            const uint64_t guild_id = std::stoull(query.getColumn(0));
+            const uint64_t channel_id = std::stoull(query.getColumn(1));
+            white_list_[guild_id].push_back(channel_id);
         }
     }
     catch (std::exception &e) {
@@ -133,6 +128,7 @@ void DBAdapter::cash_white_list() {
 
 bool DBAdapter::in_whitelist(const uint64_t &guild_id, const uint64_t &channel_id) {
     auto it_guild = white_list_.find(guild_id);
+    // if guild is not in the whitelists -> whitelists not configured -> return true
     if (it_guild == white_list_.end()) {
         return true;
     }
