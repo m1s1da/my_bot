@@ -36,6 +36,8 @@ public:
 
   void add_to_white_list(const uint64_t &guild_id, const uint64_t &channel_id);
 
+  void delete_from_white_list(const uint64_t &guild_id, const uint64_t &channel_id);
+
   void cash_white_list();
 
   bool in_whitelist(const uint64_t &guild_id, const uint64_t &channel_id);

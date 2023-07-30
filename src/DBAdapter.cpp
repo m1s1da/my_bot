@@ -143,3 +143,28 @@ bool DBAdapter::in_whitelist(const uint64_t &guild_id,
       std::find(it_guild->second.begin(), it_guild->second.end(), channel_id);
   return it_channel != it_guild->second.end();
 }
+
+void DBAdapter::delete_from_white_list(const uint64_t &guild_id,
+                                       const uint64_t &channel_id) {
+  const string query_str =
+      "DELETE FROM white_lists WHERE guild_id = ? AND channel_id = ?";
+  SQLite::Statement query(db_, query_str);
+  query.bind(1, to_string(guild_id));
+  query.bind(2, to_string(channel_id));
+  try {
+    query.exec();
+    auto it_guild = white_list_.find(guild_id);
+    if (it_guild == white_list_.end()) {
+      return;
+    }
+    auto it_channel =
+        std::find(it_guild->second.begin(), it_guild->second.end(), channel_id);
+    if (it_channel == it_guild->second.end()) {
+      return;
+    }
+    it_guild->second.erase(it_channel);
+  } catch (std::exception &e) {
+    spdlog::error("add_to_white_list: {}", e.what());
+  }
+  spdlog::debug("delete_from_white_list");
+}

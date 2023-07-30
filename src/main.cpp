@@ -20,22 +20,40 @@ int main() {
 
   bot.on_ready([&bot](const dpp::ready_t &event) {
     if (dpp::run_once<struct register_bot_commands>()) {
-      dpp::slashcommand white_list("white_list", "Choose text channels",
+      dpp::slashcommand add_white_list("add_white_list", "Choose text channels",
                                    bot.me.id);
-      white_list.add_option(dpp::command_option(dpp::co_channel, "text_channel",
+      add_white_list.add_option(dpp::command_option(dpp::co_channel, "text_channel",
                                                 "Choose an channel", true)
                                 .add_channel_type(dpp::CHANNEL_TEXT));
-      bot.global_command_create(white_list);
+      bot.global_command_create(add_white_list);
+
+      dpp::slashcommand delete_white_list("delete_white_list", "Choose text channels",
+                                       bot.me.id);
+      delete_white_list.add_option(dpp::command_option(dpp::co_channel, "text_channel",
+                                                    "Choose an channel", true)
+                                    .add_channel_type(dpp::CHANNEL_TEXT));
+      bot.global_command_create(delete_white_list);
     }
   });
 
   bot.on_slashcommand([&db_adapter](const dpp::slashcommand_t &event) {
-    if (event.command.get_command_name() == "white_list") {
+    if (event.command.get_command_name() == "add_white_list") {
       uint64_t guild_id = event.command.guild_id;
       uint64_t channel_id =
           std::get<dpp::snowflake>(event.get_parameter("text_channel"));
       db_adapter.add_to_white_list(guild_id, channel_id);
       event.reply("channel added to white list");
+    }
+    if (event.command.get_command_name() == "delete_white_list") {
+      uint64_t guild_id = event.command.guild_id;
+      uint64_t channel_id =
+          std::get<dpp::snowflake>(event.get_parameter("text_channel"));
+      if (!db_adapter.in_whitelist(guild_id, channel_id)) {
+        event.reply("error: channel not in white list");
+        return;
+      }
+      db_adapter.delete_from_white_list(guild_id, channel_id);
+      event.reply("channel deleted from to white list");
     }
   });
 
