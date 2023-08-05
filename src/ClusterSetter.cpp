@@ -25,109 +25,16 @@ void ClusterSetter::set_commands(dpp::cluster &bot, DBAdapter &db_adapter) {
 }
 
 void ClusterSetter::set_events(dpp::cluster &bot, DBAdapter &db_adapter) {
-  bot.on_voice_state_update(
-      [&db_adapter, &bot](const dpp::voice_state_update_t &event) {
-        const auto user_id = static_cast<uint64_t>(event.state.user_id);
-        const auto guild_id = static_cast<uint64_t>(event.state.guild_id);
-        auto user = bot.user_get_sync(user_id);
-        if (user.is_bot()) {
-          return;
-        }
-        if (!event.state.channel_id.empty()) {
-          // CONNECTED
-          if (db_adapter.in_connected(user_id, guild_id)) {
-            return;
-          }
-          db_adapter.start_time_count(user_id, guild_id);
-        } else {
-          // DISCONNECTED
-          db_adapter.stop_time_count(user_id, guild_id);
-        }
-      });
-
-  bot.on_guild_create([&db_adapter](const dpp::guild_create_t &event) {
-    auto voice_members = event.created->voice_members;
-    for (const auto &[user_id, voice_state] : voice_members) {
-      auto guild_id = static_cast<uint64_t>(event.created->id);
-      if (dpp::find_user(user_id)->is_bot()) {
-        continue;
-      }
-      db_adapter.start_time_count(static_cast<uint64_t>(user_id), guild_id);
-    }
-  });
-
-  bot.on_message_create([&db_adapter](const dpp::message_create_t &event) {
-    auto msg = event.msg.content;
-    if (!event.msg.stickers.empty()) {
-      msg += " %STICKER%";
-    }
-    const auto user_id = static_cast<uint64_t>(event.msg.author.id);
-    const auto guild_id = static_cast<uint64_t>(event.msg.guild_id);
-    const auto channel_id = static_cast<uint64_t>(event.msg.channel_id);
-    const bool has_attachments = !event.msg.attachments.empty();
-    if (event.msg.author.is_bot()) {
-      return;
-    }
-    if (db_adapter.in_whitelist(guild_id, channel_id)) {
-      db_adapter.write_message_info(user_id, guild_id, msg, has_attachments);
-    }
-  });
+  event_on_voice_state_update(bot, db_adapter);
+  event_on_guild_create(bot, db_adapter);
+  event_on_message_create(bot, db_adapter);
 }
 
 void ClusterSetter::set_timer(dpp::cluster &bot, DBAdapter &db_adapter) {
   bot.start_timer(
       [&db_adapter, &bot](dpp::timer timer) {
         db_adapter.flush_time_count();
-        auto *temp = db_adapter.calculate_user_points();
-        for (const auto &[guild, user_and_points] : *temp) {
-          //          string guild_name = dpp::find_guild(guild)->name;
-          uint32_t max_points = 0;
-          for (const auto &[__, points] : user_and_points) {
-            uint32_t cur_points = points.first + points.second;
-            max_points = cur_points > max_points ? cur_points : max_points;
-          }
-
-          for (const auto &[user, points] : user_and_points) {
-            auto user_obj = bot.user_get_sync(user);
-            if (points.first+points.second > max_points * 0.75) {
-              // give role
-              continue;
-            }
-            if (points.first+points.second > max_points * 0.5) {
-              // give role
-              continue;
-            }
-            if (points.first+points.second > max_points * 0.25) {
-              // give role
-              continue;
-            }
-            // give role
-
-//              string user_name = user_obj.format_username();
-//              spdlog::debug("On server {0} {1} has {2} points",
-//              guild_name,
-//                            user_name, points);
-          }
-
-          using pair_type = decltype(user_and_points)::value_type;
-          auto max_messages = std::max_element
-              (
-                  std::begin(user_and_points), std::end(user_and_points),
-                  [] (const pair_type & p1, const pair_type & p2) {
-                    return p1.second.first < p2.second.first;
-                  }
-              );
-          // give role
-
-          auto max_voice = std::max_element
-              (
-                  std::begin(user_and_points), std::end(user_and_points),
-                  [] (const pair_type & p1, const pair_type & p2) {
-                    return p1.second.second < p2.second.second;
-                  }
-              );
-          // give role
-        }
+        update_roles(bot, db_adapter);
       },
       300, [](dpp::timer timer) { spdlog::debug("timer stoped"); });
 }
@@ -169,4 +76,111 @@ void ClusterSetter::register_text_channel_command(dpp::cluster &bot,
                                               "Choose an channel", true)
                               .add_channel_type(dpp::CHANNEL_TEXT));
   bot.global_command_create(slashcommand);
+}
+
+void ClusterSetter::update_roles(dpp::cluster &bot, DBAdapter &db_adapter) {
+  auto *temp = db_adapter.calculate_user_points();
+  for (const auto &[guild, user_and_points] : *temp) {
+    //          string guild_name = dpp::find_guild(guild)->name;
+    uint32_t max_points = 0;
+    for (const auto &[__, points] : user_and_points) {
+      uint32_t cur_points = points.first + points.second;
+      max_points = cur_points > max_points ? cur_points : max_points;
+    }
+
+    for (const auto &[user, points] : user_and_points) {
+      auto user_obj = bot.user_get_sync(user);
+      uint32_t cur_points = points.first + points.second;
+      if (cur_points > max_points * 0.75) {
+        // give role
+        continue;
+      }
+      if (cur_points > max_points * 0.5) {
+        // give role
+        continue;
+      }
+      if (cur_points > max_points * 0.25) {
+        // give role
+        continue;
+      }
+      // give role
+
+      //              string user_name = user_obj.format_username();
+      //              spdlog::debug("On server {0} {1} has {2} points",
+      //              guild_name,
+      //                            user_name, points);
+    }
+
+    using pair_type = decltype(user_and_points)::value_type;
+    auto max_messages =
+        std::max_element(std::begin(user_and_points), std::end(user_and_points),
+                         [](const pair_type &p1, const pair_type &p2) {
+                           return p1.second.first < p2.second.first;
+                         });
+    // give role
+
+    auto max_voice =
+        std::max_element(std::begin(user_and_points), std::end(user_and_points),
+                         [](const pair_type &p1, const pair_type &p2) {
+                           return p1.second.second < p2.second.second;
+                         });
+    // give role
+  }
+}
+
+void ClusterSetter::event_on_voice_state_update(dpp::cluster &bot,
+                                                DBAdapter &db_adapter) {
+  bot.on_voice_state_update(
+      [&db_adapter, &bot](const dpp::voice_state_update_t &event) {
+        const auto user_id = static_cast<uint64_t>(event.state.user_id);
+        const auto guild_id = static_cast<uint64_t>(event.state.guild_id);
+        auto user = bot.user_get_sync(user_id);
+        if (user.is_bot()) {
+          return;
+        }
+        if (!event.state.channel_id.empty()) {
+          // CONNECTED
+          if (db_adapter.in_connected(user_id, guild_id)) {
+            return;
+          }
+          db_adapter.start_time_count(user_id, guild_id);
+        } else {
+          // DISCONNECTED
+          db_adapter.stop_time_count(user_id, guild_id);
+        }
+      });
+}
+
+void ClusterSetter::event_on_guild_create(dpp::cluster &bot,
+                                          DBAdapter &db_adapter) {
+  bot.on_guild_create([&db_adapter](const dpp::guild_create_t &event) {
+    auto voice_members = event.created->voice_members;
+    for (const auto &[user_id, voice_state] : voice_members) {
+      auto guild_id = static_cast<uint64_t>(event.created->id);
+      if (dpp::find_user(user_id)->is_bot()) {
+        continue;
+      }
+      db_adapter.start_time_count(static_cast<uint64_t>(user_id), guild_id);
+    }
+  });
+}
+
+void ClusterSetter::event_on_message_create(dpp::cluster &bot,
+                                            DBAdapter &db_adapter) {
+  bot.on_message_create([&db_adapter](const dpp::message_create_t &event) {
+    auto msg = event.msg.content;
+    if (!event.msg.stickers.empty()) {
+      msg += " %STICKER%";
+    }
+    const auto user_id = static_cast<uint64_t>(event.msg.author.id);
+    const auto guild_id = static_cast<uint64_t>(event.msg.guild_id);
+    const auto channel_id = static_cast<uint64_t>(event.msg.channel_id);
+    const bool has_attachments = !event.msg.attachments.empty();
+    if (event.msg.author.is_bot()) {
+      return;
+    }
+    if (db_adapter.in_whitelist(guild_id, channel_id)) {
+      db_adapter.write_message_info(user_id, guild_id, msg, has_attachments);
+    }
+  });
 }
