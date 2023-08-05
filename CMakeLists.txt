@@ -12,13 +12,14 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/libs/SQLiteCpp)
 # Create an executable
 add_executable(${PROJECT_NAME}
         src/main.cpp
+        ${SQLite3_INCLUDE_DIRS}
         # your others files...
         src/DBAdapter.cpp
         src/DBAdapter.h
         src/MessageChecker.cpp
         src/MessageChecker.h
-        ${SQLite3_INCLUDE_DIRS}
-        )
+        src/ClusterSetter.cpp
+        src/ClusterSetter.h)
 
 # Linking libraries
 

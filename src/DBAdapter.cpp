@@ -17,7 +17,7 @@ DBAdapter::DBAdapter(const string &db_path)
   auto &dotenv = dotenv::env.instance();
   SECOND_COST =
       dotenv["SECOND_COST"].empty() ? 1 : std::stoul(dotenv["SECOND_COST"]);
-  WORD_COST = dotenv["WORD_COST"].empty() ? SECOND_COST * 150
+  WORD_COST = dotenv["WORD_COST"].empty() ? SECOND_COST * 100
                                           : std::stoul(dotenv["WORD_COST"]);
   ATTACHMENT_COST = dotenv["ATTACHMENT_COST"].empty()
                         ? WORD_COST * 3
@@ -214,14 +214,6 @@ const DBAdapter::u_points *DBAdapter::calculate_user_points() {
   } catch (std::exception &e) {
     spdlog::error("calculate_user_points: {}", e.what());
   }
-
-  for (auto &[guild, users_and_points] : user_points_) {
-    std::sort(users_and_points.begin(), users_and_points.end(),
-              [](pair<u_int64_t, uint32_t> &x, pair<u_int64_t, uint32_t> &y) {
-                return x.second > y.second;
-              });
-  }
-
   return &user_points_;
 }
 
@@ -230,28 +222,14 @@ void DBAdapter::calculate_message_points(const uint64_t &user_id,
                                          const uint32_t &word_counter,
                                          const uint32_t &attachment_counter) {
   auto &guild = user_points_[guild_id];
-  auto it = std::find_if(
-      guild.begin(), guild.end(),
-      [&user_id](pair<uint64_t, uint32_t> &x) { return user_id == x.first; });
   auto points = word_counter * WORD_COST + attachment_counter * ATTACHMENT_COST;
-  if (it == guild.end()) {
-    guild.push_back({user_id, points});
-    return;
-  }
-  it->second += points;
+  guild[user_id].first += points;
 }
 
 void DBAdapter::calculate_voice_points(const uint64_t &user_id,
                                        const uint64_t &guild_id,
                                        const uint32_t &time_counter) {
   auto &guild = user_points_[guild_id];
-  auto it = std::find_if(
-      guild.begin(), guild.end(),
-      [&user_id](pair<uint64_t, uint32_t> &x) { return user_id == x.first; });
   auto points = time_counter * SECOND_COST;
-  if (it == guild.end()) {
-    guild.push_back({user_id, points});
-    return;
-  }
-  it->second += points;
+  guild[user_id].second += points;
 }
