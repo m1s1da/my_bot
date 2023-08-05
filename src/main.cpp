@@ -17,7 +17,6 @@ int main() {
                    dpp::i_default_intents | dpp::i_message_content);
 
   DBAdapter db_adapter(dotenv["DB_PATH"]);
-  bot.on_log(dpp::utility::cout_logger());
 
   ClusterSetter::setup_cluster(bot, db_adapter);
 

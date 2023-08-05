@@ -5,6 +5,7 @@
 #include "ClusterSetter.h"
 
 void ClusterSetter::setup_cluster(dpp::cluster &bot, DBAdapter &db_adapter) {
+  bot.on_log(dpp::utility::cout_logger());
   set_commands(bot, db_adapter);
   set_events(bot, db_adapter);
   set_timer(bot, db_adapter);
