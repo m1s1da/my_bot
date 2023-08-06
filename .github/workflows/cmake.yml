@@ -31,3 +31,9 @@ jobs:
         cd ..
         cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
         cmake --build ${{github.workspace}}/build -j8 --config ${{env.BUILD_TYPE}}
+      
+    - name: Export
+      uses: actions/upload-artifact@v3
+      with:
+        name: export-binaries
+        path: build
