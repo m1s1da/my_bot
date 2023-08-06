@@ -4,6 +4,7 @@ cd ./libs
 git clone https://github.com/brainboxdotcc/DPP.git
 git clone https://github.com/gabime/spdlog.git
 git clone https://github.com/adeharo9/cpp-dotenv.git
+git clone https://github.com/SRombauts/SQLiteCpp.git
 # shellcheck disable=SC2103
 cd ..
 touch ".env"

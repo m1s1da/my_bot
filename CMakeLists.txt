@@ -7,7 +7,7 @@ project(discord-bot VERSION 1.0 DESCRIPTION "A discord bot")
 add_subdirectory(libs/DPP)
 add_subdirectory(libs/spdlog)
 add_subdirectory(libs/cpp-dotenv)
-add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/libs/SQLiteCpp)
+add_subdirectory(libs/SQLiteCpp)
 
 # Create an executable
 add_executable(${PROJECT_NAME}
@@ -17,7 +17,6 @@ add_executable(${PROJECT_NAME}
         src/DBAdapter.h
         src/MessageChecker.cpp
         src/MessageChecker.h
-        ${SQLite3_INCLUDE_DIRS}
         )
 
 # Linking libraries
@@ -27,7 +26,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         spdlog
         cpp_dotenv
         SQLiteCpp
-        sqlite3
         )
 #target_link_libraries(${PROJECT_NAME} PRIVATE sqlite_orm::sqlite_orm)
 
