@@ -7,8 +7,6 @@
 #include "DBAdapter.h"
 #include <dpp/dpp.h>
 
-
-
 class ClusterSetter {
 public:
   static void setup_cluster(dpp::cluster &bot, DBAdapter &db_adapter);
@@ -21,12 +19,24 @@ private:
   static void update_roles(dpp::cluster &bot, DBAdapter &db_adapter);
 
   /* Slashcommands */
-  static void register_text_channel_command(dpp::cluster &bot, const string &command_name);
-  static void add_white_list(DBAdapter &db_adapter, const dpp::slashcommand_t &event);
-  static void delete_white_list(DBAdapter &db_adapter, const dpp::slashcommand_t &event);
+  static void register_text_channel_command(dpp::cluster &bot,
+                                            const string &command_name);
+  static void register_string_int_command(dpp::cluster &bot,
+                                          const string &command_name);
+  static void register_mentionable_command(dpp::cluster &bot,
+                                           const string &command_name);
+  static void add_white_list(DBAdapter &db_adapter,
+                             const dpp::slashcommand_t &event);
+  static void delete_white_list(DBAdapter &db_adapter,
+                                const dpp::slashcommand_t &event);
+  static void add_role(dpp::cluster &bot, DBAdapter &db_adapter,
+                       const dpp::slashcommand_t &event);
+  static void delete_role(dpp::cluster &bot, DBAdapter &db_adapter,
+                          const dpp::slashcommand_t &event);
 
   /* Events */
-  static void event_on_voice_state_update(dpp::cluster &bot, DBAdapter &db_adapter);
+  static void event_on_voice_state_update(dpp::cluster &bot,
+                                          DBAdapter &db_adapter);
   static void event_on_guild_create(dpp::cluster &bot, DBAdapter &db_adapter);
   static void event_on_message_create(dpp::cluster &bot, DBAdapter &db_adapter);
 };

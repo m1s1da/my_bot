@@ -26,7 +26,7 @@ public:
 
   using u_points =
       map<uint64_t, map<uint64_t, pair<uint32_t /*message_points*/,
-                                               uint32_t /*voice_points*/>>>;
+                                       uint32_t /*voice_points*/>>>;
 
   void start_time_count(const uint64_t &user_id, const uint64_t &guild_id);
 
@@ -43,6 +43,9 @@ public:
 
   void delete_from_white_list(const uint64_t &guild_id,
                               const uint64_t &channel_id);
+  void add_role(const uint64_t &guild_id, const uint64_t &role_id,
+                const int64_t &percent);
+  void delete_role(const uint64_t &guild_id, const uint64_t &role_id);
 
   bool in_whitelist(const uint64_t &guild_id, const uint64_t &channel_id);
 
@@ -50,11 +53,12 @@ public:
 
 private:
   void cash_white_list();
+  void cash_roles();
 
-  void calculate_message_points(
-      const uint64_t &user_id,
-      const uint64_t &guild_id, const uint32_t &word_counter,
-      const uint32_t &attachment_counter);
+  void calculate_message_points(const uint64_t &user_id,
+                                const uint64_t &guild_id,
+                                const uint32_t &word_counter,
+                                const uint32_t &attachment_counter);
 
   void calculate_voice_points(const uint64_t &user_id, const uint64_t &guild_id,
                               const uint32_t &time_counter);
@@ -69,6 +73,12 @@ private:
 
   map<pair<uint64_t, uint64_t>, uint64_t> user_connected_timestamp_map_;
   map<uint64_t, vector<uint64_t>> white_list_;
+  map<uint64_t, vector<pair<uint64_t, int64_t>>> roles_;
+
+public:
+  const map<uint64_t, vector<pair<uint64_t, int64_t>>> &getRoles() const;
+
+private:
   u_points user_points_;
 
   uint32_t SECOND_COST;

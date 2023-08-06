@@ -16,6 +16,8 @@ void ClusterSetter::set_commands(dpp::cluster &bot, DBAdapter &db_adapter) {
     if (dpp::run_once<struct register_bot_commands>()) {
       register_text_channel_command(bot, "add_white_list");
       register_text_channel_command(bot, "delete_white_list");
+      register_string_int_command(bot, "add_role");
+      register_mentionable_command(bot, "delete_role");
     }
   });
 
@@ -69,6 +71,51 @@ void ClusterSetter::delete_white_list(DBAdapter &db_adapter,
   }
 }
 
+void ClusterSetter::add_role(dpp::cluster &bot, DBAdapter &db_adapter,
+                             const dpp::slashcommand_t &event) {
+  if (event.command.get_command_name() == "add_role") {
+    uint64_t guild_id = event.command.guild_id;
+    const auto role_name = std::get<string>(event.get_parameter("name"));
+    const auto percent = std::get<int64_t>(event.get_parameter("value"));
+    if (percent > 99) {
+      event.reply(
+          dpp::message("ERROR: more than 99%").set_flags(dpp::m_ephemeral));
+      return;
+    }
+    dpp::role new_role;
+    new_role.set_name(role_name);
+    std::thread t1([&]() {
+      db_adapter.add_role(guild_id, bot.role_create_sync(new_role).id, percent);
+      // TODO:порядок ролей
+      update_roles(bot, db_adapter);
+      event.reply(dpp::message("role created").set_flags(dpp::m_ephemeral));
+    });
+    t1.join();
+  }
+}
+
+void ClusterSetter::delete_role(dpp::cluster &bot, DBAdapter &db_adapter,
+                                const dpp::slashcommand_t &event) {
+  if (event.command.get_command_name() == "delete_role") {
+    uint64_t guild_id = event.command.guild_id;
+    const auto role_id = static_cast<uint64_t>(
+        std::get<dpp::snowflake>(event.get_parameter("name")));
+
+    std::thread t1([&]() {
+      if (bot.roles_get_sync(guild_id).contains(role_id)) {
+        bot.role_delete(guild_id, role_id);
+        db_adapter.delete_role(guild_id, role_id);
+        update_roles(bot, db_adapter);
+        event.reply(dpp::message("role deleted").set_flags(dpp::m_ephemeral));
+      } else {
+        event.reply(
+            dpp::message("ERROR: not a role").set_flags(dpp::m_ephemeral));
+      }
+    });
+    t1.join();
+  }
+}
+
 void ClusterSetter::register_text_channel_command(dpp::cluster &bot,
                                                   const string &command_name) {
   dpp::slashcommand slashcommand(command_name, "Choose text channel",
@@ -90,26 +137,23 @@ void ClusterSetter::update_roles(dpp::cluster &bot, DBAdapter &db_adapter) {
     }
 
     for (const auto &[user, points] : user_and_points) {
-      auto user_obj = bot.user_get_sync(user);
+      //      std::thread t1([&]() { auto user_obj = bot.user_get_sync(user);
+      //      }); t1.join();
       uint32_t cur_points = points.first + points.second;
-      if (cur_points > max_points * 0.75) {
-        // give role
-        continue;
+      auto it = db_adapter.getRoles().find(guild);
+      for (const auto &[role_id, percent] : it->second) {
+        std::thread t1(
+            [&]() { bot.guild_member_remove_role_sync(guild, user, role_id); });
+        t1.join();
       }
-      if (cur_points > max_points * 0.5) {
-        // give role
-        continue;
+      for (const auto &[role_id, percent] : it->second) {
+        if (cur_points > max_points * percent / 100) {
+          std::thread t1(
+              [&]() { bot.guild_member_add_role_sync(guild, user, role_id); });
+          t1.join();
+          break;
+        }
       }
-      if (cur_points > max_points * 0.25) {
-        // give role
-        continue;
-      }
-      // give role
-
-      //              string user_name = user_obj.format_username();
-      //              spdlog::debug("On server {0} {1} has {2} points",
-      //              guild_name,
-      //                            user_name, points);
     }
 
     using pair_type = decltype(user_and_points)::value_type;
@@ -135,20 +179,23 @@ void ClusterSetter::event_on_voice_state_update(dpp::cluster &bot,
       [&db_adapter, &bot](const dpp::voice_state_update_t &event) {
         const auto user_id = static_cast<uint64_t>(event.state.user_id);
         const auto guild_id = static_cast<uint64_t>(event.state.guild_id);
-        auto user = bot.user_get_sync(user_id);
-        if (user.is_bot()) {
-          return;
-        }
-        if (!event.state.channel_id.empty()) {
-          // CONNECTED
-          if (db_adapter.in_connected(user_id, guild_id)) {
+        std::thread t1([&]() {
+          auto user = bot.user_get_sync(user_id);
+          if (user.is_bot()) {
             return;
           }
-          db_adapter.start_time_count(user_id, guild_id);
-        } else {
-          // DISCONNECTED
-          db_adapter.stop_time_count(user_id, guild_id);
-        }
+          if (!event.state.channel_id.empty()) {
+            // CONNECTED
+            if (db_adapter.in_connected(user_id, guild_id)) {
+              return;
+            }
+            db_adapter.start_time_count(user_id, guild_id);
+          } else {
+            // DISCONNECTED
+            db_adapter.stop_time_count(user_id, guild_id);
+          }
+        });
+        t1.join();
       });
 }
 
@@ -184,4 +231,24 @@ void ClusterSetter::event_on_message_create(dpp::cluster &bot,
       db_adapter.write_message_info(user_id, guild_id, msg, has_attachments);
     }
   });
+}
+
+void ClusterSetter::register_string_int_command(dpp::cluster &bot,
+                                                const string &command_name) {
+  dpp::slashcommand slashcommand(command_name, "Type name and value",
+                                 bot.me.id);
+  slashcommand
+      .add_option(
+          dpp::command_option(dpp::co_string, "name", "Type a name", true))
+      .add_option(
+          dpp::command_option(dpp::co_integer, "value", "Type a value", true));
+  bot.global_command_create(slashcommand);
+}
+
+void ClusterSetter::register_mentionable_command(dpp::cluster &bot,
+                                                 const string &command_name) {
+  dpp::slashcommand slashcommand(command_name, "Chose a variant", bot.me.id);
+  slashcommand.add_option(dpp::command_option(
+      dpp::co_mentionable, "mentionable", "Chose a variant", true));
+  bot.global_command_create(slashcommand);
 }
