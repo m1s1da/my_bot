@@ -1,5 +1,4 @@
 /cmake-build-debug/
-/libs/*
 /.env
 /.idea/
 /my_bot_db
