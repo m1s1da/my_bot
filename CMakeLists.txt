@@ -23,8 +23,8 @@ find_package(OpenSSL REQUIRED)
 
 
 target_include_directories(${BOT_NAME} PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/tavernbot
         ${OPENSSL_INCLUDE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
         )
 
 target_include_directories(${BOT_NAME} PRIVATE

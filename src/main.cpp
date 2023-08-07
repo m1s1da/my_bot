@@ -1,5 +1,6 @@
+#include <tavernbot/tavernbot.h>
 #include "DBAdapter.h"
-#include "tavernbot/tavernbot.h"
+
 
 int main() {
 #ifdef NDEBUG
@@ -113,8 +114,8 @@ int main() {
           for (const auto &[user, points] : user_and_points) {
             auto user_obj = bot.user_get_sync(user);
             string user_name = user_obj.format_username();
-            spdlog::debug("On server {0} {1} has {2} points", guild_name,
-                          user_name, points);
+            spdlog::debug("On server {0} {1} has points", guild_name,
+                          user_name);
           }
         }
       },

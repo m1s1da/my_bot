@@ -7,6 +7,6 @@
 
 #include <dpp/dpp.h>
 #include <dpp/nlohmann/json.hpp>
-#include "spdlog/spdlog.h"
+#include <spdlog/spdlog.h>
 #include "dotenv.h"
 #endif // DISCORD_BOT_DISCORDBOT_H
