@@ -6,6 +6,7 @@ add_executable(
         ${PROJECT_NAME}
         ${mainsrc})
 
+
 target_link_libraries(${PROJECT_NAME}
         dpp
         spdlog

@@ -6,6 +6,7 @@ on:
   pull_request:
     branches: [ "SubmoduleAddition" ]
 
+
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
@@ -40,3 +41,4 @@ jobs:
       with:
         name: export-binaries
         path: build
+

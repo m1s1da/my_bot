@@ -17,12 +17,13 @@ DBAdapter::DBAdapter(const string &db_path)
   auto &dotenv = dotenv::env.instance();
   SECOND_COST =
       dotenv["SECOND_COST"].empty() ? 1 : std::stoul(dotenv["SECOND_COST"]);
-  WORD_COST = dotenv["WORD_COST"].empty() ? SECOND_COST * 150
+  WORD_COST = dotenv["WORD_COST"].empty() ? SECOND_COST * 100
                                           : std::stoul(dotenv["WORD_COST"]);
   ATTACHMENT_COST = dotenv["ATTACHMENT_COST"].empty()
                         ? WORD_COST * 3
                         : std::stoul(dotenv["ATTACHMENT_COST"]);
   cash_white_list();
+  cash_roles();
 }
 
 uint32_t DBAdapter::get_time_now() {
@@ -173,7 +174,7 @@ void DBAdapter::delete_from_white_list(const uint64_t &guild_id,
     }
     it_guild->second.erase(it_channel);
   } catch (std::exception &e) {
-    spdlog::error("add_to_white_list: {}", e.what());
+    spdlog::error("delete_from_white_list: {}", e.what());
   }
   spdlog::debug("delete_from_white_list");
 }
@@ -214,14 +215,6 @@ const DBAdapter::u_points *DBAdapter::calculate_user_points() {
   } catch (std::exception &e) {
     spdlog::error("calculate_user_points: {}", e.what());
   }
-
-  for (auto &[guild, users_and_points] : user_points_) {
-    std::sort(users_and_points.begin(), users_and_points.end(),
-              [](pair<u_int64_t, uint32_t> &x, pair<u_int64_t, uint32_t> &y) {
-                return x.second > y.second;
-              });
-  }
-
   return &user_points_;
 }
 
@@ -230,28 +223,75 @@ void DBAdapter::calculate_message_points(const uint64_t &user_id,
                                          const uint32_t &word_counter,
                                          const uint32_t &attachment_counter) {
   auto &guild = user_points_[guild_id];
-  auto it = std::find_if(
-      guild.begin(), guild.end(),
-      [&user_id](pair<uint64_t, uint32_t> &x) { return user_id == x.first; });
   auto points = word_counter * WORD_COST + attachment_counter * ATTACHMENT_COST;
-  if (it == guild.end()) {
-    guild.push_back({user_id, points});
-    return;
-  }
-  it->second += points;
+  guild[user_id].first += points;
 }
 
 void DBAdapter::calculate_voice_points(const uint64_t &user_id,
                                        const uint64_t &guild_id,
                                        const uint32_t &time_counter) {
   auto &guild = user_points_[guild_id];
-  auto it = std::find_if(
-      guild.begin(), guild.end(),
-      [&user_id](pair<uint64_t, uint32_t> &x) { return user_id == x.first; });
   auto points = time_counter * SECOND_COST;
-  if (it == guild.end()) {
-    guild.push_back({user_id, points});
-    return;
+  guild[user_id].second += points;
+}
+
+void DBAdapter::add_role(const uint64_t &guild_id, const uint64_t &role_id,
+                         const int64_t &percent) {
+  const string query_str = "INSERT INTO GUILD_ROLES VALUES (?,?,?)";
+  SQLite::Statement query(db_, query_str);
+  query.bind(1, to_string(guild_id));
+  query.bind(2, to_string(role_id));
+  query.bind(3, percent);
+  try {
+    query.exec();
+    roles_[guild_id].push_back({role_id, percent});
+  } catch (std::exception &e) {
+    spdlog::error("add_role: {}", e.what());
   }
-  it->second += points;
+  spdlog::debug("add_role");
+}
+
+void DBAdapter::delete_role(const uint64_t &guild_id, const uint64_t &role_id) {
+  const string query_str =
+      "DELETE FROM guild_roles WHERE guild_id = ? AND role_id = ?";
+  SQLite::Statement query(db_, query_str);
+  query.bind(1, to_string(guild_id));
+  query.bind(2, to_string(role_id));
+  try {
+    query.exec();
+    auto it_guild = roles_.find(guild_id);
+    if (it_guild == roles_.end()) {
+      return;
+    }
+    auto it_role = std::find_if(
+        it_guild->second.begin(), it_guild->second.end(),
+        [&](const pair<uint64_t, int64_t> &x) { return x.first == role_id; });
+    if (it_role == it_guild->second.end()) {
+      return;
+    }
+    it_guild->second.erase(it_role);
+  } catch (std::exception &e) {
+    spdlog::error("delete_role: {}", e.what());
+  }
+  spdlog::debug("delete_role");
+}
+
+void DBAdapter::cash_roles() {
+  const string query_str = "SELECT * FROM guild_roles;";
+  SQLite::Statement query(db_, query_str);
+  try {
+    while (query.executeStep()) {
+      const uint64_t guild_id = std::stoull(query.getColumn(0));
+      const uint64_t role_id = std::stoull(query.getColumn(1));
+      const int64_t percent = std::stoi(query.getColumn(1));
+      roles_[guild_id].push_back({role_id, percent});
+    }
+  } catch (std::exception &e) {
+    spdlog::error("cash_roles: {}", e.what());
+  }
+  spdlog::debug("cash_roles");
+}
+const map<uint64_t, vector<pair<uint64_t, int64_t>>> &
+DBAdapter::getRoles() const {
+  return roles_;
 }
