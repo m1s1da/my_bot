@@ -1,0 +1,12 @@
+[submodule "libs/DPP"]
+	path = libs/DPP
+	url = https://github.com/brainboxdotcc/DPP.git
+[submodule "libs/spdlog"]
+	path = libs/spdlog
+	url = https://github.com/gabime/spdlog.git
+[submodule "libs/cpp-dotenv"]
+	path = libs/cpp-dotenv
+	url = https://github.com/adeharo9/cpp-dotenv.git
+[submodule "libs/SQLiteCpp"]
+	path = libs/SQLiteCpp
+	url = https://github.com/SRombauts/SQLiteCpp.git
