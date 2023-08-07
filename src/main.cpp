@@ -1,8 +1,5 @@
-#include "dotenv.h"
-#include <dpp/dpp.h>
-
 #include "DBAdapter.h"
-#include "spdlog/spdlog.h"
+#include "discordbot/discordbot.h"
 
 int main() {
 #ifdef NDEBUG
