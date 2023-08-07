@@ -3,3 +3,4 @@
 /.env
 /.idea/
 /my_bot_db
+*/CMakeFiles

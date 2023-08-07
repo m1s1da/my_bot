@@ -1,12 +1,9 @@
-[submodule "libs/DPP"]
-	path = libs/DPP
-	url = https://github.com/brainboxdotcc/DPP.git
-[submodule "libs/spdlog"]
-	path = libs/spdlog
+[submodule "third_party/spdlog"]
+	path = third_party/spdlog
 	url = https://github.com/gabime/spdlog.git
-[submodule "libs/cpp-dotenv"]
-	path = libs/cpp-dotenv
+[submodule "third_party/cpp-dotenv"]
+	path = third_party/cpp-dotenv
 	url = https://github.com/adeharo9/cpp-dotenv.git
-[submodule "libs/SQLiteCpp"]
-	path = libs/SQLiteCpp
+[submodule "third_party/SQLiteCpp"]
+	path = third_party/SQLiteCpp
 	url = https://github.com/SRombauts/SQLiteCpp.git
