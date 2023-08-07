@@ -98,8 +98,7 @@ void DBAdapter::write_message_info(const uint64_t &user_id,
 
 bool DBAdapter::in_connected(const uint64_t &user_id,
                              const uint64_t &guild_id) {
-  return user_connected_timestamp_map_.find({user_id, guild_id}) !=
-         user_connected_timestamp_map_.end();
+  return user_connected_timestamp_map_.contains({user_id, guild_id});
 }
 
 void DBAdapter::flush_time_count() {
