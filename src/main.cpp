@@ -1,5 +1,5 @@
 #include "DBAdapter.h"
-#include "discordbot/discordbot.h"
+#include "tavernbot/tavernbot.h"
 
 int main() {
 #ifdef NDEBUG

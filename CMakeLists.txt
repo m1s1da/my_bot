@@ -1,18 +1,18 @@
 cmake_minimum_required(VERSION 3.15)
-set(BOT_NAME "discord-bot")
+set(BOT_NAME "tavernbot")
 project(${BOT_NAME})
 
 aux_source_directory(src mainsrc)
 add_executable(
         ${BOT_NAME}
-        ${mainsrc} include/discordbot/discordbot.h)
+        ${mainsrc})
 
 string(ASCII 27 Esc)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 set_target_properties(${BOT_NAME} PROPERTIES
-        CXX_STANDARD 20
+        CXX_STANDARD 17
         CXX_STANDARD_REQUIRED ON
         )
 
@@ -23,12 +23,13 @@ find_package(OpenSSL REQUIRED)
 
 
 target_include_directories(${BOT_NAME} PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/tavernbot
         ${OPENSSL_INCLUDE_DIR}
         )
 
 target_include_directories(${BOT_NAME} PRIVATE
         third_party/spdlog/include
+        third_party/cpp-dotenv/include
         )
 
 target_link_libraries(${BOT_NAME}

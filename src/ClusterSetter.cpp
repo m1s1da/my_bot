@@ -102,7 +102,8 @@ void ClusterSetter::delete_role(dpp::cluster &bot, DBAdapter &db_adapter,
         std::get<dpp::snowflake>(event.get_parameter("name")));
 
     std::thread t1([&]() {
-      if (bot.roles_get_sync(guild_id).contains(role_id)) {
+      if (bot.roles_get_sync(guild_id).find(role_id) !=
+          bot.roles_get_sync(guild_id).end()) {
         bot.role_delete(guild_id, role_id);
         db_adapter.delete_role(guild_id, role_id);
         update_roles(bot, db_adapter);
