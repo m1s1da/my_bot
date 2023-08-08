@@ -26,7 +26,7 @@ jobs:
 
     - name: Libraries install
       run: |
-        sudo apt-install libopus0
+        sudo apt install libopus0
         sudo apt install wget
         wget -O dpp.deb https://dl.dpp.dev/
         sudo dpkg -i dpp.deb
