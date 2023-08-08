@@ -26,8 +26,22 @@ jobs:
 
     - name: Libraries install
       run: |
-        cd scripts
-        sudo ./install_libs_debian.sh
+        apt install wget
+        wget -O dpp.deb https://dl.dpp.dev/
+        dpkg -i dpp.deb
+        rm dpp.deb
+        apt install libspdlog-dev
+        cd third_party
+        git submodule init
+        git submodule update
+        cd ..
+        cd third_party/SQLiteCpp
+        cmake -B ./build
+        cmake --build ./build -j8
+        cd build
+        sudo make install
+        cd ..
+        rm -r build
         cd ..
 
     - name: Build
