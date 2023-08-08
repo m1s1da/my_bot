@@ -2,9 +2,9 @@ name: CMake
 
 on:
   push:
-    branches: [ "SubmoduleAddition" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "SubmoduleAddition" ]
+    branches: [ "main" ]
 
 
 env:
