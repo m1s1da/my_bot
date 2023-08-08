@@ -26,11 +26,11 @@ jobs:
 
     - name: Libraries install
       run: |
-        apt install wget
+        sudo apt install wget
         wget -O dpp.deb https://dl.dpp.dev/
         sudo dpkg -i dpp.deb
         rm dpp.deb
-        apt install libspdlog-dev
+        sudo apt install libspdlog-dev
         cd third_party
         git submodule init
         git submodule update
