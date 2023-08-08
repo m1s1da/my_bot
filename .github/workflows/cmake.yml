@@ -27,7 +27,7 @@ jobs:
     - name: Libraries install
       run: |
         cd scripts
-        ./install_libs_debian.sh
+        sudo ./install_libs_debian.sh
         cd ..
 
     - name: Build
