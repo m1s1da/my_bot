@@ -21,7 +21,7 @@ DBAdapter::DBAdapter(const string &db_path)
     ATTACHMENT_COST = config["ATTACHMENT_COST"];
     TRACKED_PERIOD = config["TRACKED_PERIOD"];
   } catch (std::exception &e) {
-    spdlog::error("can't read cost: {}", e.what());
+    spdlog::info("can't read costs, will be used default values");
     SECOND_COST = 1;
     WORD_COST = SECOND_COST * 100;
     ATTACHMENT_COST = WORD_COST * 3;
@@ -288,7 +288,7 @@ void DBAdapter::cash_roles() {
     while (query.executeStep()) {
       const uint64_t guild_id = std::stoull(query.getColumn(0));
       const uint64_t role_id = std::stoull(query.getColumn(1));
-      const int64_t percent = std::stoi(query.getColumn(1));
+      const int64_t percent = std::stoi(query.getColumn(2));
       roles_[guild_id].push_back({role_id, percent});
     }
   } catch (std::exception &e) {
