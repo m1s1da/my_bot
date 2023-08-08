@@ -24,10 +24,13 @@ jobs:
       with:
         submodules: true
 
+    - name: Installing SUDO
+      command: 'apt-get update && apt-get install -y sudo && rm -rf /var/lib/apt/lists/*'
+
     - name: Libraries install
       run: |
         cd scripts
-        sudo ./install_libs_debian.sh
+        ./install_libs_debian.sh
         cd ..
 
     - name: Build
