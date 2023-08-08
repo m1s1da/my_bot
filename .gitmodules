@@ -1,9 +1,3 @@
-[submodule "third_party/spdlog"]
-	path = third_party/spdlog
-	url = https://github.com/gabime/spdlog.git
-[submodule "third_party/cpp-dotenv"]
-	path = third_party/cpp-dotenv
-	url = https://github.com/adeharo9/cpp-dotenv.git
-[submodule "third_party/SQLiteCpp"]
-	path = third_party/SQLiteCpp
+[submodule "lib/SQLiteCpp"]
+	path = lib/SQLiteCpp
 	url = https://github.com/SRombauts/SQLiteCpp.git
