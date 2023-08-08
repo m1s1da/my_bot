@@ -5,15 +5,14 @@
 #ifndef DISCORD_BOT_DBADAPTER_H
 #define DISCORD_BOT_DBADAPTER_H
 
+#include <tavernbot/tavernbot.h>
+
 #include <cstdint>
 #include <map>
 #include <memory>
 #include <string>
 #include <utility>
 
-#include "spdlog/sinks/stdout_color_sinks.h"
-#include "spdlog/spdlog.h"
-#include <SQLiteCpp/SQLiteCpp.h>
 
 using std::map;
 using std::pair;

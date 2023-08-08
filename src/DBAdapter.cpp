@@ -3,7 +3,6 @@
 //
 
 #include "DBAdapter.h"
-#include "dotenv.h"
 #include <chrono>
 
 #include "MessageChecker.h"

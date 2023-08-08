@@ -18,33 +18,34 @@ set_target_properties(${BOT_NAME} PROPERTIES
 
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 find_package(Threads REQUIRED)
-find_package(DPP)
 find_package(OpenSSL REQUIRED)
-
+find_package(DPP)
+find_package(SQLiteCpp)
 
 target_include_directories(${BOT_NAME} PUBLIC
         ${OPENSSL_INCLUDE_DIR}
+        ${SQLiteCpp_INCLUDE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         )
 
 target_include_directories(${BOT_NAME} PRIVATE
         third_party/spdlog/include
-        third_party/cpp-dotenv/include
         )
 
 target_link_libraries(${BOT_NAME}
-        spdlog
+        dpp
         cpp_dotenv
+        spdlog
         SQLiteCpp
         dl
         ${CMAKE_THREAD_LIBS_INIT}
         ${OPENSSL_CRYPTO_LIBRARY}
         ${OPENSSL_SSL_LIBRARY}
+        ${SQLiteCpp_LIBRARIES}
         )
 
 add_subdirectory(third_party/spdlog)
 add_subdirectory(third_party/cpp-dotenv)
-add_subdirectory(third_party/SQLiteCpp)
 
 if (DPP_FOUND)
     target_link_libraries(${BOT_NAME} ${DPP_LIBRARIES})
@@ -72,4 +73,31 @@ else ()
     endif ()
 
     target_link_libraries(${BOT_NAME} dpp)
+endif ()
+
+if (SQLiteCpp_FOUND)
+    target_link_libraries(${BOT_NAME} ${SQLiteCpp_LIBRARIES})
+    target_include_directories(${BOT_NAME} PUBLIC ${SQLiteCpp_INCLUDE_DIR})
+else ()
+    message(WARNING "Could not find SQLiteCpp install. Building from source instead.")
+    include(FetchContent)
+
+    FetchContent_Declare(
+            libSQLiteCpp
+            GIT_REPOSITORY https://github.com/SRombauts/SQLiteCpp.git
+            GIT_TAG master)
+
+    FetchContent_GetProperties(libSQLiteCpp)
+    if (NOT libSQLiteCpp_POPULATED)
+        FetchContent_Populate(libSQLiteCpp)
+        target_include_directories(${BOT_NAME} PUBLIC
+                ${libSQLiteCpp_SOURCE_DIR}/include
+                )
+        add_subdirectory(
+                ${libSQLiteCpp_SOURCE_DIR}
+                ${libSQLiteCpp_BINARY_DIR}
+                EXCLUDE_FROM_ALL)
+    endif ()
+
+    target_link_libraries(${BOT_NAME} SQLiteCpp)
 endif ()
