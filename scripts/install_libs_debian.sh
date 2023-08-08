@@ -1,6 +1,7 @@
-apt install wget
+sudo apt install libopus0
+sudo apt install wget
 wget -O dpp.deb https://dl.dpp.dev/
-dpkg -i dpp.deb
+sudo dpkg -i dpp.deb
 rm dpp.deb
 sudo apt install libspdlog-dev
 ./init.sh

@@ -29,10 +29,6 @@ target_include_directories(${BOT_NAME} PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         )
 
-target_include_directories(${BOT_NAME} PRIVATE
-        third_party/spdlog/include
-        )
-
 target_link_libraries(${BOT_NAME}
         dpp
         SQLiteCpp

@@ -1,3 +1,4 @@
+yum install opus #??????
 yum install wget
 wget -O dpp.rpm https://dl.dpp.dev/latest/linux-x64/rpm
 yum localinstall dpp.rpm

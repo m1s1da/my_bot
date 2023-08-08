@@ -1,5 +1,5 @@
 # shellcheck disable=SC2164
-cd ../third_party/SQLiteCpp
+cd ../lib/SQLiteCpp
 cmake -B ./build
 cmake --build ./build -j8
 cd build
