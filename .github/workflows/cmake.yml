@@ -28,7 +28,7 @@ jobs:
       run: |
         apt install wget
         wget -O dpp.deb https://dl.dpp.dev/
-        dpkg -i dpp.deb
+        sudo dpkg -i dpp.deb
         rm dpp.deb
         apt install libspdlog-dev
         cd third_party
