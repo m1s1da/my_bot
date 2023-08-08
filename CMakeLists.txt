@@ -35,17 +35,14 @@ target_include_directories(${BOT_NAME} PRIVATE
 
 target_link_libraries(${BOT_NAME}
         dpp
-        cpp_dotenv
-        spdlog
         SQLiteCpp
+        spdlog::spdlog
         dl
         ${CMAKE_THREAD_LIBS_INIT}
         ${OPENSSL_CRYPTO_LIBRARY}
         ${OPENSSL_SSL_LIBRARY}
         ${SQLiteCpp_LIBRARIES}
         )
-
-add_subdirectory(third_party/cpp-dotenv)
 
 if (DPP_FOUND)
     target_link_libraries(${BOT_NAME} ${DPP_LIBRARIES})

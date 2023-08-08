@@ -9,11 +9,14 @@ int main() {
   spdlog::set_level(spdlog::level::debug);
 #endif
 
-  auto &dotenv = dotenv::env.load_dotenv("../.env", true);
-  dpp::cluster bot(dotenv["BOT_TOKEN"],
+  json config;
+  std::ifstream configfile("../config.json");
+  configfile >> config;
+
+  dpp::cluster bot(config["BOT_TOKEN"],
                    dpp::i_default_intents | dpp::i_message_content);
 
-  DBAdapter db_adapter(dotenv["DB_PATH"]);
+  DBAdapter db_adapter(config["DB_PATH"]);
   bot.on_log(dpp::utility::cout_logger());
 
   bot.on_ready([&bot](const dpp::ready_t &event) {
