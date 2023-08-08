@@ -24,12 +24,14 @@ jobs:
       with:
         submodules: true
 
+    - name: Libraries install
+      run: |
+        cd scripts
+        ./install_libs_debian.sh
+        cd ..
+
     - name: Build
       run: |
-        cd third_party
-        git submodule init
-        git submodule update
-        cd ..
         cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
         cmake --build ${{github.workspace}}/build -j8 --config ${{env.BUILD_TYPE}}
         cd build
