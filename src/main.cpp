@@ -1,5 +1,6 @@
 #include <tavernbot/tavernbot.h>
 #include "DBAdapter.h"
+#include "ClusterSetter.h"
 
 
 int main() {
