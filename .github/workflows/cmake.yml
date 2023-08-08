@@ -24,12 +24,29 @@ jobs:
       with:
         submodules: true
 
-    - name: Build
+    - name: Libraries install
       run: |
-        cd libs
+        sudo apt install libopus0
+        sudo apt install wget
+        wget -O dpp.deb https://dl.dpp.dev/
+        sudo dpkg -i dpp.deb
+        rm dpp.deb
+        sudo apt install libspdlog-dev
+        cd lib
         git submodule init
         git submodule update
         cd ..
+        cd lib/SQLiteCpp
+        cmake -B ./build
+        cmake --build ./build -j8
+        cd build
+        sudo make install
+        cd ..
+        rm -r build
+        cd ..
+
+    - name: Build
+      run: |
         cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
         cmake --build ${{github.workspace}}/build -j8 --config ${{env.BUILD_TYPE}}
         cd build

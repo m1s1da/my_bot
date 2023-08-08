@@ -1,5 +1,6 @@
-/cmake*
+/cmake-*
 /build*
 /.env
 /.idea/
 /my_bot_db
+*/CMakeFiles

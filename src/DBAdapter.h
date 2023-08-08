@@ -5,15 +5,14 @@
 #ifndef DISCORD_BOT_DBADAPTER_H
 #define DISCORD_BOT_DBADAPTER_H
 
+#include <tavernbot/tavernbot.h>
+
 #include <cstdint>
 #include <map>
 #include <memory>
 #include <string>
 #include <utility>
 
-#include "spdlog/sinks/stdout_color_sinks.h"
-#include "spdlog/spdlog.h"
-#include <SQLiteCpp/SQLiteCpp.h>
 
 using std::map;
 using std::pair;
@@ -22,7 +21,7 @@ using std::vector;
 
 class DBAdapter {
 public:
-  DBAdapter(const string &db_path);
+  explicit DBAdapter(const string &db_path);
 
   using u_points =
       map<uint64_t, map<uint64_t, pair<uint32_t /*message_points*/,
@@ -76,7 +75,7 @@ private:
   map<uint64_t, vector<pair<uint64_t, int64_t>>> roles_;
 
 public:
-  const map<uint64_t, vector<pair<uint64_t, int64_t>>> &getRoles() const;
+  [[nodiscard]] const map<uint64_t, vector<pair<uint64_t, int64_t>>> &getRoles() const;
 
 private:
   u_points user_points_;

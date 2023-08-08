@@ -3,7 +3,6 @@
 //
 
 #include "DBAdapter.h"
-#include "dotenv.h"
 #include <chrono>
 
 #include "MessageChecker.h"
@@ -14,14 +13,10 @@ using std::to_string;
 DBAdapter::DBAdapter(const string &db_path)
     : db_(db_path, SQLite::OPEN_READWRITE) {
   spdlog::info("DB is ready");
-  auto &dotenv = dotenv::env.instance();
-  SECOND_COST =
-      dotenv["SECOND_COST"].empty() ? 1 : std::stoul(dotenv["SECOND_COST"]);
-  WORD_COST = dotenv["WORD_COST"].empty() ? SECOND_COST * 100
-                                          : std::stoul(dotenv["WORD_COST"]);
-  ATTACHMENT_COST = dotenv["ATTACHMENT_COST"].empty()
-                        ? WORD_COST * 3
-                        : std::stoul(dotenv["ATTACHMENT_COST"]);
+
+  SECOND_COST = 1;
+  WORD_COST = SECOND_COST * 100;
+  ATTACHMENT_COST = WORD_COST * 3;
   cash_white_list();
   cash_roles();
 }
