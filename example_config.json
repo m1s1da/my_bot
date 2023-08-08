@@ -1,0 +1,8 @@
+{
+  "BOT_TOKEN": "your bot token here",
+  "DB_PATH": "../my_bot_db",
+  "SECOND_COST": 1,
+  "WORD_COST": 100,
+  "ATTACHMENT_COST": 300,
+  "TRACKED_PERIOD": 2592000
+}

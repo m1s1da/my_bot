@@ -83,6 +83,7 @@ private:
   uint32_t SECOND_COST;
   uint32_t WORD_COST;
   uint32_t ATTACHMENT_COST;
+  uint32_t TRACKED_PERIOD;
 };
 
 #endif // DISCORD_BOT_DBADAPTER_H

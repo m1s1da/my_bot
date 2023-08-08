@@ -7,16 +7,26 @@
 
 #include "MessageChecker.h"
 
-#define DB_ADAPTER_MONTH 2592000
 using std::to_string;
 
 DBAdapter::DBAdapter(const string &db_path)
     : db_(db_path, SQLite::OPEN_READWRITE) {
   spdlog::info("DB is ready");
-
-  SECOND_COST = 1;
-  WORD_COST = SECOND_COST * 100;
-  ATTACHMENT_COST = WORD_COST * 3;
+  try {
+    json config;
+    std::ifstream configfile("../config.json");
+    configfile >> config;
+    SECOND_COST = config["SECOND_COST"];
+    WORD_COST = config["WORD_COST"];
+    ATTACHMENT_COST = config["ATTACHMENT_COST"];
+    TRACKED_PERIOD = config["TRACKED_PERIOD"];
+  } catch (std::exception &e) {
+    spdlog::error("can't read cost: {}", e.what());
+    SECOND_COST = 1;
+    WORD_COST = SECOND_COST * 100;
+    ATTACHMENT_COST = WORD_COST * 3;
+    TRACKED_PERIOD = 2592000 * 3;
+  }
   cash_white_list();
   cash_roles();
 }
@@ -181,7 +191,7 @@ const DBAdapter::u_points *DBAdapter::calculate_user_points() {
       "FROM user_messages WHERE timestamp > ? "
       "GROUP BY user_id, guild_id";
   SQLite::Statement query_msg(db_, query_str);
-  query_msg.bind(1, get_time_now() - DB_ADAPTER_MONTH);
+  query_msg.bind(1, get_time_now() - TRACKED_PERIOD);
   try {
     while (query_msg.executeStep()) {
       const uint64_t user_id = std::stoull(query_msg.getColumn(0));
@@ -199,7 +209,7 @@ const DBAdapter::u_points *DBAdapter::calculate_user_points() {
               "FROM user_voice WHERE timestamp > ? "
               "GROUP BY user_id, guild_id";
   SQLite::Statement query_voice(db_, query_str);
-  query_voice.bind(1, get_time_now() - DB_ADAPTER_MONTH);
+  query_voice.bind(1, get_time_now() - TRACKED_PERIOD);
   try {
     while (query_voice.executeStep()) {
       const uint64_t user_id = std::stoull(query_voice.getColumn(0));
