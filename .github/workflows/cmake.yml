@@ -32,11 +32,11 @@ jobs:
         sudo dpkg -i dpp.deb
         rm dpp.deb
         sudo apt install libspdlog-dev
-        cd third_party
+        cd lib
         git submodule init
         git submodule update
         cd ..
-        cd third_party/SQLiteCpp
+        cd lib/SQLiteCpp
         cmake -B ./build
         cmake --build ./build -j8
         cd build
