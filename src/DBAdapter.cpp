@@ -272,7 +272,7 @@ void DBAdapter::add_role(const uint64_t &guild_id, const uint64_t &role_id,
   try {
     query.exec();
     auto &guild = roles_[guild_id];
-    GuildRole value = {role_id, percent};
+    GuildRole value = {role_id, percent, is_best_in_text, is_best_in_voice};
     auto it = std::upper_bound(guild.begin(), guild.end(), value,
                                [&](const GuildRole &a, const GuildRole &b) {
                                  return a.percent < b.percent;
