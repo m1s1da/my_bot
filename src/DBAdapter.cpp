@@ -260,12 +260,15 @@ void DBAdapter::calculate_voice_points(const uint64_t &user_id,
 }
 
 void DBAdapter::add_role(const uint64_t &guild_id, const uint64_t &role_id,
-                         const int64_t &percent) {
-  const string query_str = "INSERT INTO GUILD_ROLES VALUES (?,?,?)";
+                         const int64_t &percent, const bool is_best_in_text,
+                         const bool is_best_in_voice) {
+  const string query_str = "INSERT INTO GUILD_ROLES VALUES (?,?,?,?,?)";
   SQLite::Statement query(db_, query_str);
   query.bind(1, to_string(guild_id));
   query.bind(2, to_string(role_id));
   query.bind(3, percent);
+  query.bind(4, is_best_in_text);
+  query.bind(5, is_best_in_voice);
   try {
     query.exec();
     auto &guild = roles_[guild_id];

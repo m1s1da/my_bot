@@ -49,7 +49,8 @@ public:
   void delete_from_white_list(const uint64_t &guild_id,
                               const uint64_t &channel_id);
   void add_role(const uint64_t &guild_id, const uint64_t &role_id,
-                const int64_t &percent);
+                const int64_t &percent, const bool is_best_in_text = false,
+                const bool is_best_in_voice = false);
   void delete_role(const uint64_t &guild_id, const uint64_t &role_id);
 
   bool in_whitelist(const uint64_t &guild_id, const uint64_t &channel_id);
