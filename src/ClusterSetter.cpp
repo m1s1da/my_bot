@@ -86,7 +86,6 @@ void ClusterSetter::add_role(dpp::cluster &bot, DBAdapter &db_adapter,
     new_role.set_name(role_name);
     std::thread t1([&]() {
       db_adapter.add_role(guild_id, bot.role_create_sync(new_role).id, percent);
-      // TODO:порядок ролей
       update_roles(bot, db_adapter);
       event.reply(dpp::message("role created").set_flags(dpp::m_ephemeral));
     });
@@ -131,7 +130,7 @@ void ClusterSetter::update_roles(dpp::cluster &bot, DBAdapter &db_adapter) {
   for (const auto &[guild, user_and_points] : *temp) {
     //          string guild_name = dpp::find_guild(guild)->name;
     uint32_t max_points = 0;
-    for (const auto &[__, points] : user_and_points) {
+    for (const auto &[_, points] : user_and_points) {
       uint32_t cur_points = points.first + points.second;
       max_points = cur_points > max_points ? cur_points : max_points;
     }

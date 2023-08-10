@@ -268,7 +268,14 @@ void DBAdapter::add_role(const uint64_t &guild_id, const uint64_t &role_id,
   query.bind(3, percent);
   try {
     query.exec();
-    roles_[guild_id].push_back({role_id, percent});
+    auto &guild = roles_[guild_id];
+    using role_type = std::remove_reference_t<decltype(guild)>::value_type;
+    role_type value = {role_id, percent};
+    auto it = std::upper_bound(guild.begin(), guild.end(), value,
+                               [](const role_type &a, const role_type &b) {
+                                 return a.second < b.second;
+                               });
+    guild.insert(it, value);
   } catch (std::exception &e) {
     spdlog::error("add_role: {}", e.what());
   }
@@ -301,7 +308,8 @@ void DBAdapter::delete_role(const uint64_t &guild_id, const uint64_t &role_id) {
 }
 
 void DBAdapter::cash_roles() {
-  const string query_str = "SELECT * FROM guild_roles;";
+  const string query_str = "SELECT * FROM guild_roles "
+                           "ORDER BY guild_id, percent DESC";
   SQLite::Statement query(db_, query_str);
   try {
     while (query.executeStep()) {
