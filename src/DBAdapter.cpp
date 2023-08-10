@@ -12,21 +12,40 @@ using std::to_string;
 DBAdapter::DBAdapter(const string &db_path)
     : db_(db_path, SQLite::OPEN_READWRITE) {
   spdlog::info("DB is ready");
+  json config;
+  std::ifstream configfile("../config.json");
+  configfile >> config;
+
   try {
-    json config;
-    std::ifstream configfile("../config.json");
-    configfile >> config;
     SECOND_COST = config["SECOND_COST"];
+  } catch (std::exception &e) {
+    SECOND_COST = 1;
+    spdlog::info("can't find SECOND_COST, SECOND_COST = {}", SECOND_COST);
+  }
+
+  try {
     WORD_COST = config["WORD_COST"];
+  } catch (std::exception &e) {
+    WORD_COST = SECOND_COST * 100;
+    spdlog::info("can't find WORD_COST, WORD_COST = {}", WORD_COST);
+  }
+
+  try {
     ATTACHMENT_COST = config["ATTACHMENT_COST"];
+  } catch (std::exception &e) {
+    ATTACHMENT_COST = WORD_COST * 3;
+    spdlog::info("can't find ATTACHMENT_COST, ATTACHMENT_COST = {}",
+                 ATTACHMENT_COST);
+  }
+
+  try {
     TRACKED_PERIOD = config["TRACKED_PERIOD"];
   } catch (std::exception &e) {
-    spdlog::info("can't read costs, will be used default values");
-    SECOND_COST = 1;
-    WORD_COST = SECOND_COST * 100;
-    ATTACHMENT_COST = WORD_COST * 3;
     TRACKED_PERIOD = 2592000 * 3;
+    spdlog::info("can't find TRACKED_PERIOD, TRACKED_PERIOD = {} months",
+                 static_cast<double>(TRACKED_PERIOD) / 2592000);
   }
+
   cash_white_list();
   cash_roles();
 }
