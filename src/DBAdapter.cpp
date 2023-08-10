@@ -318,7 +318,12 @@ void DBAdapter::cash_roles() {
       const uint64_t guild_id = std::stoull(query.getColumn(0));
       const uint64_t role_id = std::stoull(query.getColumn(1));
       const int64_t percent = std::stoi(query.getColumn(2));
-      roles_[guild_id].push_back({role_id, percent});
+      const int8_t is_best_in_text = query.getColumn(3);
+      const int8_t is_best_in_voice = query.getColumn(3);
+
+      roles_[guild_id].push_back({role_id, percent,
+                                  static_cast<bool>(is_best_in_text),
+                                  static_cast<bool>(is_best_in_voice)});
     }
   } catch (std::exception &e) {
     spdlog::error("cash_roles: {}", e.what());
