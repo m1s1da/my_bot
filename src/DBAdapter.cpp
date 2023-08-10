@@ -272,8 +272,8 @@ void DBAdapter::add_role(const uint64_t &guild_id, const uint64_t &role_id,
     using role_type = std::remove_reference_t<decltype(guild)>::value_type;
     role_type value = {role_id, percent};
     auto it = std::upper_bound(guild.begin(), guild.end(), value,
-                               [](const role_type &a, const role_type &b) {
-                                 return a.second < b.second;
+                               [&](const role_type &a, const role_type &b) {
+                                 return a.percent < b.percent;
                                });
     guild.insert(it, value);
   } catch (std::exception &e) {
@@ -294,9 +294,9 @@ void DBAdapter::delete_role(const uint64_t &guild_id, const uint64_t &role_id) {
     if (it_guild == roles_.end()) {
       return;
     }
-    auto it_role = std::find_if(
-        it_guild->second.begin(), it_guild->second.end(),
-        [&](const pair<uint64_t, int64_t> &x) { return x.first == role_id; });
+    auto it_role =
+        std::find_if(it_guild->second.begin(), it_guild->second.end(),
+                     [&](const GroupRole &x) { return x.role_id == role_id; });
     if (it_role == it_guild->second.end()) {
       return;
     }
@@ -323,7 +323,7 @@ void DBAdapter::cash_roles() {
   }
   spdlog::debug("cash_roles");
 }
-const map<uint64_t, vector<pair<uint64_t, int64_t>>> &
-DBAdapter::getRoles() const {
+
+const map<uint64_t, vector<GroupRole>> &DBAdapter::getRoles() const {
   return roles_;
 }

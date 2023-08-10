@@ -1,24 +1,35 @@
+create table guild_roles
+(
+    guild_id      TEXT    not null,
+    role_id       TEXT    not null,
+    percent       INTEGER not null,
+    best_in_text  INTEGER         ,
+    best_in_voice INTEGER         ,
+    constraint guild_roles_pk
+        primary key (guild_id, role_id) on conflict replace
+);
+
 create table user_messages
 (
-    user_id            TEXT,
-    guild_id           TEXT,
-    word_counter       INTEGER,
-    attachment_counter INTEGER,
-    timestamp          INTEGER
+    user_id            TEXT    not null,
+    guild_id           TEXT    not null,
+    word_counter       INTEGER         ,
+    attachment_counter INTEGER         ,
+    timestamp          INTEGER not null
 );
 
 create table user_voice
 (
-    user_id      TEXT,
-    guild_id     TEXT,
-    time_counter INTEGER,
-    timestamp    INTEGER
+    user_id      TEXT    not null,
+    guild_id     TEXT    not null,
+    time_counter INTEGER not null,
+    timestamp    INTEGER not null
 );
 
 create table white_lists
 (
-    guild_id   TEXT,
-    channel_id TEXT,
+    guild_id   TEXT not null,
+    channel_id TEXT not null,
     constraint table_name_pk
         unique (guild_id, channel_id) on conflict ignore
 );

@@ -140,15 +140,17 @@ void ClusterSetter::update_roles(dpp::cluster &bot, DBAdapter &db_adapter) {
       //      }); t1.join();
       uint32_t cur_points = points.first + points.second;
       auto it = db_adapter.getRoles().find(guild);
-      for (const auto &[role_id, percent] : it->second) {
-        std::thread t1(
-            [&]() { bot.guild_member_remove_role_sync(guild, user, role_id); });
+      for (const auto &role : it->second) {
+        std::thread t1([&]() {
+          bot.guild_member_remove_role_sync(guild, user, role.role_id);
+        });
         t1.join();
       }
-      for (const auto &[role_id, percent] : it->second) {
-        if (cur_points > max_points * percent / 100) {
-          std::thread t1(
-              [&]() { bot.guild_member_add_role_sync(guild, user, role_id); });
+      for (const auto &role : it->second) {
+        if (cur_points > max_points * role.percent / 100) {
+          std::thread t1([&]() {
+            bot.guild_member_add_role_sync(guild, user, role.role_id);
+          });
           t1.join();
           break;
         }

@@ -13,11 +13,17 @@
 #include <string>
 #include <utility>
 
-
 using std::map;
 using std::pair;
 using std::string;
 using std::vector;
+
+struct GroupRole {
+  uint64_t role_id = 0;
+  int64_t percent = 100;
+  bool is_best_in_text = false;
+  bool is_best_in_voice = false;
+};
 
 class DBAdapter {
 public:
@@ -72,10 +78,10 @@ private:
 
   map<pair<uint64_t, uint64_t>, uint64_t> user_connected_timestamp_map_;
   map<uint64_t, vector<uint64_t>> white_list_;
-  map<uint64_t, vector<pair<uint64_t, int64_t>>> roles_;
+  map<uint64_t, vector<GroupRole>> roles_;
 
 public:
-  [[nodiscard]] const map<uint64_t, vector<pair<uint64_t, int64_t>>> &getRoles() const;
+  const map<uint64_t, vector<GroupRole>> &getRoles() const;
 
 private:
   u_points user_points_;
