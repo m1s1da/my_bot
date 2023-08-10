@@ -269,10 +269,9 @@ void DBAdapter::add_role(const uint64_t &guild_id, const uint64_t &role_id,
   try {
     query.exec();
     auto &guild = roles_[guild_id];
-    using role_type = std::remove_reference_t<decltype(guild)>::value_type;
-    role_type value = {role_id, percent};
+    GuildRole value = {role_id, percent};
     auto it = std::upper_bound(guild.begin(), guild.end(), value,
-                               [&](const role_type &a, const role_type &b) {
+                               [&](const GuildRole &a, const GuildRole &b) {
                                  return a.percent < b.percent;
                                });
     guild.insert(it, value);
@@ -296,7 +295,7 @@ void DBAdapter::delete_role(const uint64_t &guild_id, const uint64_t &role_id) {
     }
     auto it_role =
         std::find_if(it_guild->second.begin(), it_guild->second.end(),
-                     [&](const GroupRole &x) { return x.role_id == role_id; });
+                     [&](const GuildRole &x) { return x.role_id == role_id; });
     if (it_role == it_guild->second.end()) {
       return;
     }
@@ -324,6 +323,6 @@ void DBAdapter::cash_roles() {
   spdlog::debug("cash_roles");
 }
 
-const map<uint64_t, vector<GroupRole>> &DBAdapter::getRoles() const {
+const map<uint64_t, vector<GuildRole>> &DBAdapter::getRoles() const {
   return roles_;
 }

@@ -18,7 +18,7 @@ using std::pair;
 using std::string;
 using std::vector;
 
-struct GroupRole {
+struct GuildRole {
   uint64_t role_id = 0;
   int64_t percent = 100;
   bool is_best_in_text = false;
@@ -78,10 +78,10 @@ private:
 
   map<pair<uint64_t, uint64_t>, uint64_t> user_connected_timestamp_map_;
   map<uint64_t, vector<uint64_t>> white_list_;
-  map<uint64_t, vector<GroupRole>> roles_;
+  map<uint64_t, vector<GuildRole>> roles_;
 
 public:
-  const map<uint64_t, vector<GroupRole>> &getRoles() const;
+  const map<uint64_t, vector<GuildRole>> &getRoles() const;
 
 private:
   u_points user_points_;
