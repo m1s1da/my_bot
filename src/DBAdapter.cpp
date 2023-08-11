@@ -42,8 +42,8 @@ DBAdapter::DBAdapter(const string &db_path)
     TRACKED_PERIOD = config["TRACKED_PERIOD"];
   } catch (std::exception &e) {
     TRACKED_PERIOD = 2592000 * 3;
-    spdlog::info("can't find TRACKED_PERIOD, TRACKED_PERIOD = {} months",
-                 static_cast<double>(TRACKED_PERIOD) / 2592000);
+    spdlog::info("can't find TRACKED_PERIOD, TRACKED_PERIOD = {}",
+                 TRACKED_PERIOD);
   }
 
   cash_white_list();
@@ -331,6 +331,6 @@ void DBAdapter::cash_roles() {
   spdlog::debug("cash_roles");
 }
 
-const map<uint64_t, vector<GuildRole>> &DBAdapter::getRoles() const {
+const map<uint64_t, vector<GuildRole>> &DBAdapter::get_roles() const {
   return roles_;
 }

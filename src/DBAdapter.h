@@ -82,7 +82,7 @@ private:
   map<uint64_t, vector<GuildRole>> roles_;
 
 public:
-  const map<uint64_t, vector<GuildRole>> &getRoles() const;
+  const map<uint64_t, vector<GuildRole>> &get_roles() const;
 
 private:
   u_points user_points_;
