@@ -189,7 +189,7 @@ void ClusterSetter::update_roles(dpp::cluster &bot, DBAdapter &db_adapter) {
 
     using pair_type = decltype(user_and_points)::value_type;
     auto get_role_max =
-        [&](std::function<bool(const GuildRole &)> callback,
+        [&](const std::function<bool(const GuildRole &)>& callback,
             const std::function<bool(const pair_type &, const pair_type &)>&
                 callback2) {
           auto it = std::find_if(notable_roles.begin(), notable_roles.end(),
