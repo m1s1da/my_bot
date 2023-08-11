@@ -160,6 +160,9 @@ void ClusterSetter::update_roles(dpp::cluster &bot, DBAdapter &db_adapter) {
     for (const auto &[user_id, points] : user_and_points) {
       uint32_t cur_points = points.first + points.second;
       for (const auto &role : notable_roles) {
+        if (role.is_best_in_voice || role.is_best_in_text) {
+          continue;
+        }
         if (cur_points > max_points * role.percent / 100) {
           auto &members = roles_and_members[role.role_id];
           auto it = members.find(user_id);
@@ -184,23 +187,34 @@ void ClusterSetter::update_roles(dpp::cluster &bot, DBAdapter &db_adapter) {
     });
     t1.join();
 
-    //    using pair_type = decltype(user_and_points)::value_type;
-    //    auto max_messages =
-    //        std::max_element(std::begin(user_and_points),
-    //        std::end(user_and_points),
-    //                         [](const pair_type &p1, const pair_type &p2) {
-    //                           return p1.second.first < p2.second.first;
-    //                         });
-    //    // give role
-    //
-    //    auto max_voice =
-    //        std::max_element(std::begin(user_and_points),
-    //        std::end(user_and_points),
-    //                         [](const pair_type &p1, const pair_type &p2) {
-    //                           return p1.second.second < p2.second.second;
-    //                         });
-    //    // give role
-    //  }
+    using pair_type = decltype(user_and_points)::value_type;
+    auto get_role_max =
+        [&](std::function<bool(const GuildRole &)> callback,
+            const std::function<bool(const pair_type &, const pair_type &)>&
+                callback2) {
+          auto it = std::find_if(notable_roles.begin(), notable_roles.end(),
+                                 callback);
+          if (it != notable_roles.end()) {
+            auto max_el =
+                std::max_element(std::begin(user_and_points),
+                                 std::end(user_and_points), callback2);
+            std::thread t2([&]() {
+              bot.guild_member_add_role_sync(guild_id, max_el->first,
+                                             it->role_id);
+            });
+            t1.join();
+          }
+        };
+
+    get_role_max([&](const GuildRole &a) { return a.is_best_in_text; },
+                 [](const pair_type &p1, const pair_type &p2) {
+                   return p1.second.first < p2.second.first;
+                 });
+
+    get_role_max([&](const GuildRole &a) { return a.is_best_in_voice; },
+                 [](const pair_type &p1, const pair_type &p2) {
+                   return p1.second.second < p2.second.second;
+                 });
   }
 }
 
