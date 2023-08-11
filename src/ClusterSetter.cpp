@@ -187,7 +187,6 @@ void ClusterSetter::update_roles(dpp::cluster &bot, DBAdapter &db_adapter) {
     });
     t1.join();
 
-    //TODO: перенести выше
     using pair_type = decltype(user_and_points)::value_type;
     auto get_role_max =
         [&](const std::function<bool(const GuildRole &)>& callback,
@@ -203,7 +202,7 @@ void ClusterSetter::update_roles(dpp::cluster &bot, DBAdapter &db_adapter) {
               bot.guild_member_add_role_sync(guild_id, max_el->first,
                                              it->role_id);
             });
-            t1.join();
+            t2.join();
           }
         };
 
