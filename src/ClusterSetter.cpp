@@ -206,12 +206,12 @@ void ClusterSetter::update_roles(dpp::cluster &bot, DBAdapter &db_adapter) {
           }
         };
 
-    get_role_max([&](const GuildRole &a) { return a.is_best_in_text; },
+    get_role_max([](const GuildRole &a) { return a.is_best_in_text; },
                  [](const pair_type &p1, const pair_type &p2) {
                    return p1.second.first < p2.second.first;
                  });
 
-    get_role_max([&](const GuildRole &a) { return a.is_best_in_voice; },
+    get_role_max([](const GuildRole &a) { return a.is_best_in_voice; },
                  [](const pair_type &p1, const pair_type &p2) {
                    return p1.second.second < p2.second.second;
                  });
