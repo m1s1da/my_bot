@@ -203,18 +203,18 @@ void DBAdapter::delete_from_white_list(const uint64_t &guild_id,
   spdlog::debug("delete_from_white_list");
 }
 
-const DBAdapter::u_points *DBAdapter::calculate_user_points() {
+const DBAdapter::u_points *
+DBAdapter::calculate_user_points(const uint64_t &guild_id) {
   user_points_.clear();
   string query_str =
       "SELECT user_id, guild_id, SUM(word_counter), SUM(attachment_counter) "
-      "FROM user_messages WHERE timestamp > ? "
-      "GROUP BY user_id, guild_id";
+      "FROM user_messages WHERE timestamp > ? AND guild_id=?"
+      "GROUP BY user_id";
   SQLite::Statement query_msg(db_, query_str);
   query_msg.bind(1, get_time_now() - TRACKED_PERIOD);
   try {
     while (query_msg.executeStep()) {
       const uint64_t user_id = std::stoull(query_msg.getColumn(0));
-      const uint64_t guild_id = std::stoull(query_msg.getColumn(1));
       const uint32_t word_counter = std::stoul(query_msg.getColumn(2));
       const uint32_t attachment_counter = std::stoul(query_msg.getColumn(3));
       calculate_message_points(user_id, guild_id, word_counter,
@@ -225,21 +225,20 @@ const DBAdapter::u_points *DBAdapter::calculate_user_points() {
   }
 
   query_str = "SELECT user_id, guild_id, SUM(time_counter) "
-              "FROM user_voice WHERE timestamp > ? "
-              "GROUP BY user_id, guild_id";
+              "FROM user_voice WHERE timestamp > ? AND guild_id=?"
+              "GROUP BY user_id";
   SQLite::Statement query_voice(db_, query_str);
   query_voice.bind(1, get_time_now() - TRACKED_PERIOD);
   try {
     while (query_voice.executeStep()) {
       const uint64_t user_id = std::stoull(query_voice.getColumn(0));
-      const uint64_t guild_id = std::stoull(query_voice.getColumn(1));
       const uint32_t time_counter = std::stoul(query_voice.getColumn(2));
       calculate_voice_points(user_id, guild_id, time_counter);
     }
   } catch (std::exception &e) {
     spdlog::error("calculate_user_points: {}", e.what());
   }
-  return &user_points_;
+  return &user_points_[guild_id];
 }
 
 void DBAdapter::calculate_message_points(const uint64_t &user_id,

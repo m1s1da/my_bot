@@ -30,8 +30,7 @@ public:
   explicit DBAdapter(const string &db_path);
 
   using u_points =
-      map<uint64_t, map<uint64_t, pair<uint32_t /*message_points*/,
-                                       uint32_t /*voice_points*/>>>;
+      map<uint64_t, pair<uint32_t, uint32_t>>; /*message_points, text_points*/
 
   void start_time_count(const uint64_t &user_id, const uint64_t &guild_id);
 
@@ -55,7 +54,9 @@ public:
 
   bool in_whitelist(const uint64_t &guild_id, const uint64_t &channel_id);
 
-  const u_points *calculate_user_points();
+  const DBAdapter::u_points *calculate_user_points(const uint64_t &guild_id);
+
+  const map<uint64_t, vector<GuildRole>> &get_roles() const;
 
 private:
   void cash_white_list();
@@ -80,12 +81,7 @@ private:
   map<pair<uint64_t, uint64_t>, uint64_t> user_connected_timestamp_map_;
   map<uint64_t, vector<uint64_t>> white_list_;
   map<uint64_t, vector<GuildRole>> roles_;
-
-public:
-  const map<uint64_t, vector<GuildRole>> &get_roles() const;
-
-private:
-  u_points user_points_;
+  map<uint64_t, u_points> user_points_;
 
   uint32_t SECOND_COST;
   uint32_t WORD_COST;

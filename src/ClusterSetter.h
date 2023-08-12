@@ -4,9 +4,8 @@
 
 #ifndef DISCORD_BOT_CLUSTERSETTER_H
 #define DISCORD_BOT_CLUSTERSETTER_H
-#include <tavernbot/tavernbot.h>
 #include "DBAdapter.h"
-
+#include <tavernbot/tavernbot.h>
 
 class ClusterSetter {
 public:
@@ -17,7 +16,8 @@ private:
   static void set_events(dpp::cluster &bot, DBAdapter &db_adapter);
   static void set_timer(dpp::cluster &bot, DBAdapter &db_adapter);
 
-  static void update_roles(dpp::cluster &bot, DBAdapter &db_adapter);
+  static void update_roles(dpp::cluster &bot, DBAdapter &db_adapter,
+                           const uint64_t &guild_id);
 
   /* Slashcommands */
   static void register_text_channel_command(dpp::cluster &bot,
