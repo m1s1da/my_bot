@@ -33,7 +33,7 @@ void ClusterSetter::set_commands(dpp::cluster &bot, DBAdapter &db_adapter) {
     add_role(bot, db_adapter, event);
     delete_role(bot, db_adapter, event);
     if (event.command.get_command_name() == "test") {
-      update_roles(bot, db_adapter, uint64_t{987397377545617408});
+      update_roles(bot, db_adapter, uint64_t{609047867935424520});
       event.reply(dpp::message("test").set_flags(dpp::m_ephemeral));
     }
   });
@@ -111,7 +111,6 @@ void ClusterSetter::add_role(dpp::cluster &bot, DBAdapter &db_adapter,
     std::thread t1([&]() {
       db_adapter.add_role(guild_id, bot.role_create_sync(new_role).id, percent,
                           is_best_in_text, is_best_in_voice);
-      update_roles(bot, db_adapter, guild_id);
       event.reply(dpp::message("role created").set_flags(dpp::m_ephemeral));
     });
     t1.join();
@@ -197,24 +196,19 @@ void ClusterSetter::update_roles(dpp::cluster &bot, DBAdapter &db_adapter,
           members.erase(it);
           break;
         }
-        std::thread t1([&]() {
-          // request
-          bot.guild_member_add_role_sync(guild_id, user_id, role.role_id);
-        });
-        t1.join();
+        // request
+        bot.guild_member_add_role(guild_id, user_id, role.role_id);
         break;
       }
     }
   }
-  std::thread t1([&]() {
-    for (auto &[role_id, members] : roles_and_members) {
-      for (auto &member : members) {
-        // request
-        bot.guild_member_remove_role_sync(guild_id, member.first, role_id);
-      }
+
+  for (auto &[role_id, members] : roles_and_members) {
+    for (auto &member : members) {
+      // request
+      bot.guild_member_remove_role(guild_id, member.first, role_id);
     }
-  });
-  t1.join();
+  }
 
   using pair_type =
       std::remove_reference_t<decltype(*user_and_points)>::value_type;
@@ -227,12 +221,8 @@ void ClusterSetter::update_roles(dpp::cluster &bot, DBAdapter &db_adapter,
         if (it != notable_roles.end()) {
           auto max_el = std::max_element(user_and_points->begin(),
                                          user_and_points->end(), callback2);
-          std::thread t2([&]() {
-            // request
-            bot.guild_member_add_role_sync(guild_id, max_el->first,
-                                           it->role_id);
-          });
-          t2.join();
+          // request
+          bot.guild_member_add_role(guild_id, max_el->first, it->role_id);
         }
       };
 
