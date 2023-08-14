@@ -34,8 +34,7 @@ void ClusterSetter::set_commands(dpp::cluster &bot, DBAdapter &db_adapter) {
     delete_role(bot, db_adapter, event);
     if (event.command.get_command_name() == "test") {
       update_roles(bot, db_adapter, uint64_t{987397377545617408});
-      event.reply(dpp::message("test")
-                      .set_flags(dpp::m_ephemeral));
+      event.reply(dpp::message("test").set_flags(dpp::m_ephemeral));
     }
   });
 }
