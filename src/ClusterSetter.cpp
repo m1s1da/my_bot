@@ -93,7 +93,6 @@ void ClusterSetter::delete_white_list(DBAdapter &db_adapter,
 void ClusterSetter::add_role(dpp::cluster &bot, DBAdapter &db_adapter,
                              const dpp::slashcommand_t &event) {
   if (event.command.get_command_name() == "add_role") {
-    spdlog::debug("ClusterSetter::add_role");
     uint64_t guild_id = event.command.guild_id;
     const auto role_name = std::get<string>(event.get_parameter("role_name"));
     const auto percent = std::get<int64_t>(event.get_parameter("percent"));
@@ -154,7 +153,6 @@ ClusterSetter::register_text_channel_command(dpp::cluster &bot,
 
 void ClusterSetter::update_roles(dpp::cluster &bot, DBAdapter &db_adapter,
                                  const uint64_t &guild_id) {
-  spdlog::debug("ClusterSetter::update_roles");
   auto *user_and_points = db_adapter.calculate_user_points(guild_id);
   if (user_and_points->empty()) {
     return;
