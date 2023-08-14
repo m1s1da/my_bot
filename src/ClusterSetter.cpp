@@ -14,12 +14,16 @@ void ClusterSetter::setup_cluster(dpp::cluster &bot, DBAdapter &db_adapter) {
 void ClusterSetter::set_commands(dpp::cluster &bot, DBAdapter &db_adapter) {
   bot.on_ready([&bot](const dpp::ready_t &event) {
     if (dpp::run_once<struct register_bot_commands>()) {
-      register_text_channel_command(bot, "add_white_list");
-      register_text_channel_command(bot, "delete_white_list");
-      register_add_role_command(bot);
-      register_mentionable_command(bot, "delete_role");
-      bot.global_command_create(
-          dpp::slashcommand("test", "test test!", bot.me.id));
+      vector<dpp::slashcommand> slashcommands;
+      slashcommands.emplace_back(
+          register_text_channel_command(bot, "add_white_list"));
+      slashcommands.emplace_back(
+          register_text_channel_command(bot, "delete_white_list"));
+      slashcommands.emplace_back(register_add_role_command(bot));
+      slashcommands.emplace_back(
+          register_mentionable_command(bot, "delete_role"));
+      slashcommands.emplace_back("test", "test test!", bot.me.id);
+      bot.global_bulk_command_create(slashcommands);
     }
   });
 
@@ -137,14 +141,15 @@ void ClusterSetter::delete_role(dpp::cluster &bot, DBAdapter &db_adapter,
   }
 }
 
-void ClusterSetter::register_text_channel_command(dpp::cluster &bot,
-                                                  const string &command_name) {
+dpp::slashcommand
+ClusterSetter::register_text_channel_command(dpp::cluster &bot,
+                                             const string &command_name) {
   dpp::slashcommand slashcommand(command_name, "Choose text channel",
                                  bot.me.id);
   slashcommand.add_option(dpp::command_option(dpp::co_channel, "text_channel",
                                               "Choose an channel", true)
                               .add_channel_type(dpp::CHANNEL_TEXT));
-  bot.global_command_create(slashcommand);
+  return slashcommand;
 }
 
 void ClusterSetter::update_roles(dpp::cluster &bot, DBAdapter &db_adapter,
@@ -304,7 +309,7 @@ void ClusterSetter::event_on_message_create(dpp::cluster &bot,
   });
 }
 
-void ClusterSetter::register_add_role_command(dpp::cluster &bot) {
+dpp::slashcommand ClusterSetter::register_add_role_command(dpp::cluster &bot) {
   dpp::slashcommand slashcommand("add_role", "Add ranked role", bot.me.id);
   slashcommand
       .add_option(dpp::command_option(dpp::co_string, "role_name",
@@ -315,13 +320,14 @@ void ClusterSetter::register_add_role_command(dpp::cluster &bot) {
                                       "Is best in text?", true))
       .add_option(dpp::command_option(dpp::co_boolean, "is_best_in_voice",
                                       "Is best in voice?", true));
-  bot.global_command_create(slashcommand);
+  return slashcommand;
 }
 
-void ClusterSetter::register_mentionable_command(dpp::cluster &bot,
-                                                 const string &command_name) {
+dpp::slashcommand
+ClusterSetter::register_mentionable_command(dpp::cluster &bot,
+                                            const string &command_name) {
   dpp::slashcommand slashcommand(command_name, "Chose a variant", bot.me.id);
   slashcommand.add_option(dpp::command_option(
       dpp::co_mentionable, "mentionable", "Chose a variant", true));
-  bot.global_command_create(slashcommand);
+  return slashcommand;
 }

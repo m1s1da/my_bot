@@ -20,10 +20,12 @@ private:
                            const uint64_t &guild_id);
 
   /* Slashcommands */
-  static void register_text_channel_command(dpp::cluster &bot,
+  static dpp::slashcommand
+  register_text_channel_command(dpp::cluster &bot,
                                             const string &command_name);
-  static void register_add_role_command(dpp::cluster &bot);
-  static void register_mentionable_command(dpp::cluster &bot,
+  static dpp::slashcommand register_add_role_command(dpp::cluster &bot);
+  static dpp::slashcommand
+  register_mentionable_command(dpp::cluster &bot,
                                            const string &command_name);
   static void add_white_list(DBAdapter &db_adapter,
                              const dpp::slashcommand_t &event);
