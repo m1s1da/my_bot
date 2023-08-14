@@ -212,6 +212,7 @@ DBAdapter::calculate_user_points(const uint64_t &guild_id) {
       "GROUP BY user_id";
   SQLite::Statement query_msg(db_, query_str);
   query_msg.bind(1, get_time_now() - TRACKED_PERIOD);
+  query_msg.bind(2, to_string(guild_id));
   try {
     while (query_msg.executeStep()) {
       const uint64_t user_id = std::stoull(query_msg.getColumn(0));
@@ -229,6 +230,7 @@ DBAdapter::calculate_user_points(const uint64_t &guild_id) {
               "GROUP BY user_id";
   SQLite::Statement query_voice(db_, query_str);
   query_voice.bind(1, get_time_now() - TRACKED_PERIOD);
+  query_voice.bind(2, to_string(guild_id));
   try {
     while (query_voice.executeStep()) {
       const uint64_t user_id = std::stoull(query_voice.getColumn(0));

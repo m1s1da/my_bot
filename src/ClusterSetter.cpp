@@ -16,8 +16,10 @@ void ClusterSetter::set_commands(dpp::cluster &bot, DBAdapter &db_adapter) {
     if (dpp::run_once<struct register_bot_commands>()) {
       register_text_channel_command(bot, "add_white_list");
       register_text_channel_command(bot, "delete_white_list");
-      register_string_int_command(bot, "add_role");
+      register_add_role_command(bot);
       register_mentionable_command(bot, "delete_role");
+      bot.global_command_create(
+          dpp::slashcommand("test", "test test!", bot.me.id));
     }
   });
 
@@ -26,6 +28,10 @@ void ClusterSetter::set_commands(dpp::cluster &bot, DBAdapter &db_adapter) {
     delete_white_list(db_adapter, event);
     add_role(bot, db_adapter, event);
     delete_role(bot, db_adapter, event);
+    if (event.command.get_command_name() == "test") {
+      update_roles(bot, db_adapter, uint64_t{987397377545617408});
+      event.reply("test");
+    }
   });
 }
 
@@ -83,18 +89,25 @@ void ClusterSetter::delete_white_list(DBAdapter &db_adapter,
 void ClusterSetter::add_role(dpp::cluster &bot, DBAdapter &db_adapter,
                              const dpp::slashcommand_t &event) {
   if (event.command.get_command_name() == "add_role") {
+    spdlog::debug("ClusterSetter::add_role");
     uint64_t guild_id = event.command.guild_id;
-    const auto role_name = std::get<string>(event.get_parameter("name"));
-    const auto percent = std::get<int64_t>(event.get_parameter("value"));
-    if (percent > 99) {
+    const auto role_name = std::get<string>(event.get_parameter("role_name"));
+    const auto percent = std::get<int64_t>(event.get_parameter("percent"));
+    const auto is_best_in_text =
+        std::get<bool>(event.get_parameter("is_best_in_text"));
+    const auto is_best_in_voice =
+        std::get<bool>(event.get_parameter("is_best_in_voice"));
+    if (percent > 99 && !(is_best_in_voice || is_best_in_text)) {
       event.reply(
           dpp::message("ERROR: more than 99%").set_flags(dpp::m_ephemeral));
       return;
     }
     dpp::role new_role;
     new_role.set_name(role_name);
+    new_role.set_guild_id(guild_id);
     std::thread t1([&]() {
-      db_adapter.add_role(guild_id, bot.role_create_sync(new_role).id, percent);
+      db_adapter.add_role(guild_id, bot.role_create_sync(new_role).id, percent,
+                          is_best_in_text, is_best_in_voice);
       update_roles(bot, db_adapter, guild_id);
       event.reply(dpp::message("role created").set_flags(dpp::m_ephemeral));
     });
@@ -136,30 +149,30 @@ void ClusterSetter::register_text_channel_command(dpp::cluster &bot,
 
 void ClusterSetter::update_roles(dpp::cluster &bot, DBAdapter &db_adapter,
                                  const uint64_t &guild_id) {
+  spdlog::debug("ClusterSetter::update_roles");
   auto *user_and_points = db_adapter.calculate_user_points(guild_id);
   if (user_and_points->empty()) {
     return;
   }
-  dpp::role_map roles;
-  bot.roles_get(guild_id, [&](const dpp::confirmation_callback_t &callback) {
-    roles = std::get<dpp::role_map>(callback.value);
-  });
+  dpp::role_map *roles;
+  // request
+  std::thread t_roles(
+      [&]() { roles = new dpp::role_map(bot.roles_get_sync(guild_id)); });
+  t_roles.join();
+
   map<dpp::snowflake, dpp::members_container> roles_and_members;
   const auto &notable_roles = db_adapter.get_roles().find(guild_id)->second;
-  for (auto &role : roles) {
-    bool ok = false;
-    for (const auto &notable_role : notable_roles) {
-      auto it = std::find_if(
-          notable_roles.begin(), notable_roles.end(),
-          [&](const GuildRole &a) { return a.role_id == role.first; });
-      ok |= it != notable_roles.end();
-    }
-    if (!ok) {
-      roles.erase(role.first);
-    }
-    roles_and_members[role.first] = role.second.get_members();
-  }
+  for (auto &[role_id, role_obj] : *roles) {
+    auto it =
+        std::find_if(notable_roles.begin(), notable_roles.end(),
+                     [&](const GuildRole &a) { return a.role_id == role_id; });
 
+    if (it != notable_roles.end()) {
+      // request
+      roles_and_members[role_id] = role_obj.get_members();
+    }
+  }
+  delete roles;
   /* max points finding */
   uint32_t max_points = 0;
   for (const auto &[_, points] : *user_and_points) {
@@ -177,10 +190,12 @@ void ClusterSetter::update_roles(dpp::cluster &bot, DBAdapter &db_adapter,
         auto &members = roles_and_members[role.role_id];
         auto it = members.find(user_id);
         if (it != members.end()) {
+          // if we found user - role is correct
           members.erase(it);
           break;
         }
         std::thread t1([&]() {
+          // request
           bot.guild_member_add_role_sync(guild_id, user_id, role.role_id);
         });
         t1.join();
@@ -191,6 +206,7 @@ void ClusterSetter::update_roles(dpp::cluster &bot, DBAdapter &db_adapter,
   std::thread t1([&]() {
     for (auto &[role_id, members] : roles_and_members) {
       for (auto &member : members) {
+        // request
         bot.guild_member_remove_role_sync(guild_id, member.first, role_id);
       }
     }
@@ -209,6 +225,7 @@ void ClusterSetter::update_roles(dpp::cluster &bot, DBAdapter &db_adapter,
           auto max_el = std::max_element(user_and_points->begin(),
                                          user_and_points->end(), callback2);
           std::thread t2([&]() {
+            // request
             bot.guild_member_add_role_sync(guild_id, max_el->first,
                                            it->role_id);
           });
@@ -287,15 +304,17 @@ void ClusterSetter::event_on_message_create(dpp::cluster &bot,
   });
 }
 
-void ClusterSetter::register_string_int_command(dpp::cluster &bot,
-                                                const string &command_name) {
-  dpp::slashcommand slashcommand(command_name, "Type name and value",
-                                 bot.me.id);
+void ClusterSetter::register_add_role_command(dpp::cluster &bot) {
+  dpp::slashcommand slashcommand("add_role", "Add ranked role", bot.me.id);
   slashcommand
-      .add_option(
-          dpp::command_option(dpp::co_string, "name", "Type a name", true))
-      .add_option(
-          dpp::command_option(dpp::co_integer, "value", "Type a value", true));
+      .add_option(dpp::command_option(dpp::co_string, "role_name",
+                                      "Type a role name", true))
+      .add_option(dpp::command_option(dpp::co_integer, "percent",
+                                      "Type a percent", true))
+      .add_option(dpp::command_option(dpp::co_boolean, "is_best_in_text",
+                                      "Is best in text?", true))
+      .add_option(dpp::command_option(dpp::co_boolean, "is_best_in_voice",
+                                      "Is best in voice?", true));
   bot.global_command_create(slashcommand);
 }
 
