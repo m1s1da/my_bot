@@ -67,8 +67,8 @@ void DBAdapter::start_time_count(const uint64_t &user_id,
 void DBAdapter::write_time_overall(const uint64_t &user_id,
                                    const uint64_t &guild_id,
                                    const uint32_t &session_time_length) {
-  const string query_str = "INSERT INTO user_voice "
-                           "VALUES (?,?,?,?)";
+  const string query_str = "INSERT INTO user_activity "
+                           "VALUES (?,?,0,0,?,?)";
   SQLite::Statement query(db_, query_str);
   query.bind(1, to_string(user_id));
   query.bind(2, to_string(guild_id));
@@ -102,8 +102,8 @@ void DBAdapter::write_message_info(const uint64_t &user_id,
                                    const uint64_t &guild_id, const string &msg,
                                    bool has_attachments) {
   const uint32_t word_counter = MessageChecker::getWordCounter(msg);
-  const string query_str = "INSERT INTO user_messages "
-                           "VALUES (?,?,?,?,?)";
+  const string query_str = "INSERT INTO user_activity "
+                           "VALUES (?,?,?,?,0,?)";
   SQLite::Statement query(db_, query_str);
   query.bind(1, to_string(user_id));
   query.bind(2, to_string(guild_id));
@@ -207,39 +207,33 @@ const DBAdapter::u_points *
 DBAdapter::calculate_user_points(const uint64_t &guild_id) {
   user_points_.clear();
   string query_str =
-      "SELECT user_id, guild_id, SUM(word_counter), SUM(attachment_counter) "
-      "FROM user_messages WHERE timestamp > ? AND guild_id=?"
+      "SELECT user_id, guild_id, SUM(word_counter), SUM(attachment_counter), "
+      " SUM(time_counter) "
+      "FROM user_activity WHERE timestamp > ? AND guild_id=?"
+      "AND ("
+      "    SELECT MAX(timestamp)"
+      "    FROM user_activity AS ut2"
+      "    WHERE user_activity.user_id = ut2.user_id"
+      "      AND user_activity.guild_id = ut2.guild_id)>?"
       "GROUP BY user_id";
-  SQLite::Statement query_msg(db_, query_str);
-  query_msg.bind(1, get_time_now() - TRACKED_PERIOD);
-  query_msg.bind(2, to_string(guild_id));
+  SQLite::Statement query(db_, query_str);
+  query.bind(1, get_time_now() - TRACKED_PERIOD);
+  query.bind(2, to_string(guild_id));
+  query.bind(3, get_time_now() - 330);
   try {
-    while (query_msg.executeStep()) {
-      const uint64_t user_id = std::stoull(query_msg.getColumn(0));
-      const uint32_t word_counter = std::stoul(query_msg.getColumn(2));
-      const uint32_t attachment_counter = std::stoul(query_msg.getColumn(3));
+    while (query.executeStep()) {
+      const uint64_t user_id = std::stoull(query.getColumn(0));
+      const uint32_t word_counter = std::stoul(query.getColumn(2));
+      const uint32_t attachment_counter = std::stoul(query.getColumn(3));
+      const uint32_t time_counter = std::stoul(query.getColumn(4));
       calculate_message_points(user_id, guild_id, word_counter,
                                attachment_counter);
-    }
-  } catch (std::exception &e) {
-    spdlog::error("calculate_user_points: {}", e.what());
-  }
-
-  query_str = "SELECT user_id, guild_id, SUM(time_counter) "
-              "FROM user_voice WHERE timestamp > ? AND guild_id=?"
-              "GROUP BY user_id";
-  SQLite::Statement query_voice(db_, query_str);
-  query_voice.bind(1, get_time_now() - TRACKED_PERIOD);
-  query_voice.bind(2, to_string(guild_id));
-  try {
-    while (query_voice.executeStep()) {
-      const uint64_t user_id = std::stoull(query_voice.getColumn(0));
-      const uint32_t time_counter = std::stoul(query_voice.getColumn(2));
       calculate_voice_points(user_id, guild_id, time_counter);
     }
   } catch (std::exception &e) {
     spdlog::error("calculate_user_points: {}", e.what());
   }
+
   return &user_points_[guild_id];
 }
 
@@ -261,22 +255,22 @@ void DBAdapter::calculate_voice_points(const uint64_t &user_id,
 }
 
 void DBAdapter::add_role(const uint64_t &guild_id, const uint64_t &role_id,
-                         const int64_t &percent, const bool is_best_in_text,
+                         const int64_t &points_threshold, const bool is_best_in_text,
                          const bool is_best_in_voice) {
   const string query_str = "INSERT INTO GUILD_ROLES VALUES (?,?,?,?,?)";
   SQLite::Statement query(db_, query_str);
   query.bind(1, to_string(guild_id));
   query.bind(2, to_string(role_id));
-  query.bind(3, percent);
+  query.bind(3, points_threshold);
   query.bind(4, is_best_in_text);
   query.bind(5, is_best_in_voice);
   try {
     query.exec();
     auto &guild = roles_[guild_id];
-    GuildRole value = {role_id, percent, is_best_in_text, is_best_in_voice};
+    GuildRole value = {role_id, points_threshold, is_best_in_text, is_best_in_voice};
     auto it = std::upper_bound(guild.begin(), guild.end(), value,
                                [](const GuildRole &a, const GuildRole &b) {
-                                 return a.percent < b.percent;
+                                 return a.points_threshold < b.points_threshold;
                                });
     guild.insert(it, value);
   } catch (std::exception &e) {
@@ -312,17 +306,17 @@ void DBAdapter::delete_role(const uint64_t &guild_id, const uint64_t &role_id) {
 
 void DBAdapter::cash_roles() {
   const string query_str = "SELECT * FROM guild_roles "
-                           "ORDER BY guild_id, percent DESC";
+                           "ORDER BY guild_id, points_threshold DESC";
   SQLite::Statement query(db_, query_str);
   try {
     while (query.executeStep()) {
       const uint64_t guild_id = std::stoull(query.getColumn(0));
       const uint64_t role_id = std::stoull(query.getColumn(1));
-      const int64_t percent = std::stoi(query.getColumn(2));
+      const int64_t points_threshold = std::stoi(query.getColumn(2));
       const int8_t is_best_in_text = query.getColumn(3);
       const int8_t is_best_in_voice = query.getColumn(3);
 
-      roles_[guild_id].push_back({role_id, percent,
+      roles_[guild_id].push_back({role_id, points_threshold,
                                   static_cast<bool>(is_best_in_text),
                                   static_cast<bool>(is_best_in_voice)});
     }

@@ -20,7 +20,7 @@ using std::vector;
 
 struct GuildRole {
   uint64_t role_id = 0;
-  int64_t percent = 100;
+  int64_t points_threshold = 0;
   bool is_best_in_text = false;
   bool is_best_in_voice = false;
 };
@@ -48,7 +48,7 @@ public:
   void delete_from_white_list(const uint64_t &guild_id,
                               const uint64_t &channel_id);
   void add_role(const uint64_t &guild_id, const uint64_t &role_id,
-                const int64_t &percent, const bool is_best_in_text = false,
+                const int64_t &points_threshold, const bool is_best_in_text = false,
                 const bool is_best_in_voice = false);
   void delete_role(const uint64_t &guild_id, const uint64_t &role_id);
 
