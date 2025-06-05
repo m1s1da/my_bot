@@ -58,7 +58,7 @@ void ClusterSetter::set_timer(dpp::cluster &bot, DBAdapter &db_adapter) {
               }
             });
       },
-      300, [](dpp::timer timer) { spdlog::debug("timer stoped"); });
+      300, [](dpp::timer timer) { spdlog::debug("timer stopped"); });
 }
 
 void ClusterSetter::add_white_list(DBAdapter &db_adapter,
