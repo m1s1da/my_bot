@@ -65,5 +65,11 @@ else ()
                 EXCLUDE_FROM_ALL)
     endif ()
 
-    target_link_libraries(${BOT_NAME} dpp)
+  target_link_libraries(${BOT_NAME} dpp)
+endif ()
+
+if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/config.json")
+    message(STATUS "Copying config.json to build directory")
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.json
+                   ${CMAKE_CURRENT_BINARY_DIR}/config.json COPYONLY)
 endif ()

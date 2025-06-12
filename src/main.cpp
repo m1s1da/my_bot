@@ -10,7 +10,7 @@ int main() {
 #endif
 
   json config;
-  std::ifstream configfile("../config.json");
+  std::ifstream configfile("config.json");
   configfile >> config;
 
   dpp::cluster bot(config["BOT_TOKEN"], dpp::i_default_intents |
