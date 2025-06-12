@@ -148,7 +148,7 @@ ClusterSetter::register_text_channel_command(dpp::cluster &bot,
 
 void ClusterSetter::update_roles(dpp::cluster &bot, DBAdapter &db_adapter,
                                  const uint64_t &guild_id) {
-  auto *user_and_points = db_adapter.calculate_user_points(guild_id);
+  const auto *user_and_points = db_adapter.calculate_user_points(guild_id);
   if (user_and_points->empty()) {
     return;
   }
@@ -156,76 +156,78 @@ void ClusterSetter::update_roles(dpp::cluster &bot, DBAdapter &db_adapter,
   spdlog::debug("roles_get_sync");
   auto roles = bot.roles_get_sync(guild_id);
 
-  map<dpp::snowflake, dpp::members_container> roles_and_members;
+  std::map<dpp::snowflake, dpp::members_container> roles_and_members;
   const auto &notable_roles = db_adapter.get_roles().find(guild_id)->second;
-  for (auto &[role_id, role_obj] : roles) {
-    auto it =
-        std::find_if(notable_roles.begin(), notable_roles.end(),
-                     [&](const GuildRole &a) { return a.role_id == role_id; });
 
+  for (auto &[role_id, role_obj] : roles) {
+    auto it = std::find_if(notable_roles.begin(), notable_roles.end(),
+                           [&](const GuildRole &a) { return a.role_id == role_id; });
     if (it != notable_roles.end()) {
-      spdlog::debug("get_members");
       roles_and_members[role_id] = role_obj.get_members();
     }
   }
 
-  /* max points finding */
-  //  uint32_t max_points = 0;
-  //  for (const auto &[_, points] : *user_and_points) {
-  //    uint32_t cur_points = points.first + points.second;
-  //    max_points = cur_points > max_points ? cur_points : max_points;
-  //  }
-
   for (const auto &[user_id, points] : *user_and_points) {
     uint32_t cur_points = points.first + points.second;
-    bool found = false;
+    bool role_set = false;
+
     for (const auto &role : notable_roles) {
-      if (role.is_best_in_voice || role.is_best_in_text) {
+      if (role.is_best_in_text || role.is_best_in_voice) {
         continue;
       }
+
       auto &members = roles_and_members[role.role_id];
       auto it = members.find(user_id);
-      if (cur_points > role.points_threshold && !found) {
-        found = true;
+
+      if (!role_set && cur_points >= role.points_threshold) {
+        role_set = true;
         if (it == members.end()) {
-          spdlog::debug("guild_member_add_role 1");
           bot.guild_member_add_role(guild_id, user_id, role.role_id);
         }
-      } else {
-        if (it != members.end()) {
-          spdlog::debug("guild_member_remove_role");
-          bot.guild_member_remove_role(guild_id, user_id, role.role_id);
-        }
+      } else if (it != members.end()) {
+        bot.guild_member_remove_role(guild_id, user_id, role.role_id);
       }
     }
   }
 
-  //  using pair_type =
-  //      std::remove_reference_t<decltype(*user_and_points)>::value_type;
-  //  auto get_role_max =
-  //      [&](const std::function<bool(const GuildRole &)> &callback,
-  //          const std::function<bool(const pair_type &, const pair_type &)>
-  //              &callback2) {
-  //        auto it =
-  //            std::find_if(notable_roles.begin(), notable_roles.end(),
-  //            callback);
-  //        if (it != notable_roles.end()) {
-  //          auto max_el = std::max_element(user_and_points->begin(),
-  //                                         user_and_points->end(), callback2);
-  //          spdlog::debug("guild_member_add_role 2");
-  //          bot.guild_member_add_role(guild_id, max_el->first, it->role_id);
-  //        }
-  //      };
-  //
-  //  get_role_max([](const GuildRole &a) { return a.is_best_in_text; },
-  //               [](const pair_type &p1, const pair_type &p2) {
-  //                 return p1.second.first < p2.second.first;
-  //               });
-  //
-  //  get_role_max([](const GuildRole &a) { return a.is_best_in_voice; },
-  //               [](const pair_type &p1, const pair_type &p2) {
-  //                 return p1.second.second < p2.second.second;
-  //               });
+  using pair_type =
+      std::remove_reference_t<decltype(*user_and_points)>::value_type;
+
+  auto assign_best = [&](auto predicate, auto comparator) {
+    auto it_role =
+        std::find_if(notable_roles.begin(), notable_roles.end(), predicate);
+    if (it_role == notable_roles.end()) {
+      return;
+    }
+
+    auto best_user = std::max_element(user_and_points->begin(),
+                                      user_and_points->end(), comparator);
+    if (best_user == user_and_points->end()) {
+      return;
+    }
+
+    auto &members = roles_and_members[it_role->role_id];
+
+    for (const auto &m : members) {
+      if (m.first != best_user->first) {
+        bot.guild_member_remove_role(guild_id, m.first, it_role->role_id);
+      }
+    }
+
+    if (members.find(best_user->first) == members.end()) {
+      bot.guild_member_add_role(guild_id, best_user->first, it_role->role_id);
+    }
+  };
+
+  assign_best([](const GuildRole &a) { return a.is_best_in_text; },
+              [](const pair_type &p1, const pair_type &p2) {
+                return p1.second.first < p2.second.first;
+              });
+
+  assign_best([](const GuildRole &a) { return a.is_best_in_voice; },
+              [](const pair_type &p1, const pair_type &p2) {
+                return p1.second.second < p2.second.second;
+              });
 }
 
 void ClusterSetter::event_on_voice_state_update(dpp::cluster &bot,
