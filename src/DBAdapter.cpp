@@ -314,7 +314,7 @@ void DBAdapter::cash_roles() {
       const uint64_t role_id = std::stoull(query.getColumn(1));
       const int64_t points_threshold = std::stoi(query.getColumn(2));
       const int8_t is_best_in_text = query.getColumn(3);
-      const int8_t is_best_in_voice = query.getColumn(3);
+      const int8_t is_best_in_voice = query.getColumn(4);
 
       roles_[guild_id].push_back({role_id, points_threshold,
                                   static_cast<bool>(is_best_in_text),
