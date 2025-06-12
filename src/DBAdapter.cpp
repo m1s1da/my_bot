@@ -13,7 +13,7 @@ DBAdapter::DBAdapter(const string &db_path)
     : db_(db_path, SQLite::OPEN_READWRITE) {
   spdlog::info("DB is ready");
   json config;
-  std::ifstream configfile("../config.json");
+  std::ifstream configfile("config.json");
   configfile >> config;
 
   try {
